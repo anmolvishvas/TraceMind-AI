@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from httpx import AsyncClient
 import pytest
+from httpx import AsyncClient
 from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings

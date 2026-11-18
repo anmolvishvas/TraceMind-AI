@@ -1,7 +1,6 @@
 import pytest
-from sqlalchemy import text
 
-from app.core.database import Base, check_database_health, engine, get_async_session
+from app.core.database import Base, check_database_health, get_async_session
 
 
 @pytest.mark.asyncio
