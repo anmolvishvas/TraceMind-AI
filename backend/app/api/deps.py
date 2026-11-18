@@ -15,7 +15,7 @@ async def get_db_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-async def get_redis() -> AsyncIterator[Redis]:
+async def get_redis() -> AsyncIterator[Redis[str]]:
     """Provide active async Redis client."""
     async for redis in get_redis_client():
         yield redis

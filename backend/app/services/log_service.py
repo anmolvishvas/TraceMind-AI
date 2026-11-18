@@ -37,7 +37,7 @@ class LogService:
     and updating Redis rolling metric counters atomically.
     """
 
-    def __init__(self, db: AsyncSession, redis_client: aioredis.Redis | None = None) -> None:
+    def __init__(self, db: AsyncSession, redis_client: aioredis.Redis[str] | None = None) -> None:
         self.db = db
         self.redis = redis_client
 

@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 import app.models  # noqa: F401
 from app.core.database import Base, engine
+from app.core.redis import close_redis
 from app.main import create_app
 
 
@@ -21,6 +22,15 @@ async def setup_test_tables() -> AsyncIterator[None]:
         pass
     yield
     await engine.dispose()
+    await close_redis()
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_connections() -> AsyncIterator[None]:
+    """Tear down connection pools between tests to avoid event loop crosstalk."""
+    yield
+    await engine.dispose()
+    await close_redis()
 
 
 @pytest.fixture(scope="session")

@@ -8,6 +8,7 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
+from app.core.database import check_database_health
 from app.schemas.log_event import CanonicalLogEvent
 from app.services.log_service import IngestionResult, LogService
 
@@ -59,7 +60,7 @@ async def test_persist_batch_and_redis_metrics(sample_events: list[CanonicalLogE
 async def test_redis_metrics_failure_resilience(sample_events: list[CanonicalLogEvent]) -> None:
     """Ensure database persistence succeeds even if Redis pipeline raises an exception."""
     mock_db = AsyncMock()
-    mock_redis = AsyncMock()
+    mock_redis = MagicMock()
     mock_redis.pipeline.side_effect = RuntimeError("Redis connection dropped")
 
     service = LogService(db=mock_db, redis_client=mock_redis)
@@ -136,6 +137,10 @@ async def test_get_by_event_id_not_found() -> None:
 @pytest.mark.asyncio
 async def test_api_upload_json_logs(async_client: AsyncClient) -> None:
     """End-to-end API test uploading structured JSON logs."""
+    health = await check_database_health()
+    if not health.get("connected"):
+        pytest.skip("PostgreSQL test database is not available in local environment")
+
     json_lines = (
         '{"timestamp": "2026-11-18T10:00:00Z", "level": "info", "service": "api-gateway", "msg": "GET /status 200"}\n'
         '{"timestamp": "2026-11-18T10:00:01Z", "level": "error", "service": "api-gateway", "msg": "Upstream error 502"}\n'
@@ -157,6 +162,10 @@ async def test_api_upload_json_logs(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_upload_python_logs_with_traceback(async_client: AsyncClient) -> None:
     """End-to-end API test uploading Python logs with multi-line traceback."""
+    health = await check_database_health()
+    if not health.get("connected"):
+        pytest.skip("PostgreSQL test database is not available in local environment")
+
     log_content = (
         "2026-11-18 10:15:30,123 [INFO] worker: Starting task\n"
         "2026-11-18 10:15:31,456 [ERROR] worker: Task failed with exception\n"
@@ -182,6 +191,10 @@ async def test_api_upload_python_logs_with_traceback(async_client: AsyncClient) 
 @pytest.mark.asyncio
 async def test_api_search_logs_endpoint(async_client: AsyncClient) -> None:
     """Verify GET /api/v1/logs/search returns paginated response."""
+    health = await check_database_health()
+    if not health.get("connected"):
+        pytest.skip("PostgreSQL test database is not available in local environment")
+
     response = await async_client.get("/api/v1/logs/search?limit=10&offset=0")
     assert response.status_code == 200
     data = response.json()
@@ -194,6 +207,10 @@ async def test_api_search_logs_endpoint(async_client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_api_get_event_not_found(async_client: AsyncClient) -> None:
     """Verify GET /api/v1/logs/{event_id} returns 404 for unknown IDs."""
+    health = await check_database_health()
+    if not health.get("connected"):
+        pytest.skip("PostgreSQL test database is not available in local environment")
+
     missing_id = str(uuid4())
     response = await async_client.get(f"/api/v1/logs/{missing_id}")
     assert response.status_code == 404
