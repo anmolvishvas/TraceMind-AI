@@ -143,7 +143,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 3
 
 ### Tasks:
-- [ ] **TASK-3.1: Historical Statistical Baseline Calculator**
+- [x] **TASK-3.1: Historical Statistical Baseline Calculator**
   - **Description:** Compute 7-day rolling exponential moving averages (EMA) and standard deviations of error rates per service using Redis rolling counters.
   - **Dependencies:** TASK-2.6.
   - **Files/Modules:** `backend/app/anomaly_detection/baseline.py`.
@@ -151,7 +151,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_baseline.py`.
   - **Deliverable:** Baseline calculation engine.
 
-- [ ] **TASK-3.2: Statistical Anomaly Detection Algorithms**
+- [x] **TASK-3.2: Statistical Anomaly Detection Algorithms**
   - **Description:** Implement Z-Score ($> 3\sigma$), Interquartile Range (IQR $> Q_3 + 1.5\text{IQR}$), and Scikit-learn Isolation Forest detectors for multi-metric anomalies.
   - **Dependencies:** TASK-3.1.
   - **Files/Modules:** `backend/app/anomaly_detection/statistical.py`.
@@ -159,7 +159,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_anomaly_detection.py`.
   - **Deliverable:** Pure Python statistical detection engine.
 
-- [ ] **TASK-3.3: Multi-Dimensional Incident Correlation Engine**
+- [x] **TASK-3.3: Multi-Dimensional Incident Correlation Engine**
   - **Description:** Cluster anomalous events into unified `Incident` records using temporal proximity ($\pm 5\text{ mins}$), distributed trace IDs, service topology, and error signatures.
   - **Dependencies:** TASK-3.2.
   - **Files/Modules:** `backend/app/incidents/correlator.py`.
@@ -167,7 +167,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_correlation.py`.
   - **Deliverable:** Deterministic event clustering engine.
 
-- [ ] **TASK-3.4: Incident Lifecycle State Machine & Severity Scoring**
+- [x] **TASK-3.4: Incident Lifecycle State Machine & Severity Scoring**
   - **Description:** Manage incident transitions (`DETECTED` $\rightarrow$ `INVESTIGATING` $\rightarrow$ `IDENTIFIED` $\rightarrow$ `MITIGATED` $\rightarrow$ `RESOLVED`) and calculate severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`). Prohibit automated resolution.
   - **Dependencies:** TASK-3.3.
   - **Files/Modules:** `backend/app/incidents/state_machine.py`, `backend/app/models/incident.py`.
@@ -175,7 +175,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_incident_lifecycle.py`.
   - **Deliverable:** Incident state management service.
 
-- [ ] **TASK-3.5: Chronological Incident Timeline Generator**
+- [x] **TASK-3.5: Chronological Incident Timeline Generator**
   - **Description:** Generate structured incident progression timelines from the earliest trigger anomaly to cascading downstream errors.
   - **Dependencies:** TASK-3.3.
   - **Files/Modules:** `backend/app/incidents/timeline.py`.

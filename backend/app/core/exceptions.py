@@ -46,3 +46,20 @@ class LLMInferenceException(TraceMindBaseException):
 
 class MCPToolException(TraceMindBaseException):
     """Raised when an MCP tool invocation fails."""
+
+
+class EntityNotFoundError(TraceMindBaseException):
+    """Raised when a requested domain entity (log, incident, anomaly) is not found."""
+
+    def __init__(self, entity: str, entity_id: str, details: dict[str, Any] | None = None) -> None:
+        super().__init__(f"{entity} with identifier '{entity_id}' was not found.", details)
+        self.entity = entity
+        self.entity_id = entity_id
+
+
+class InvalidStateTransitionError(TraceMindBaseException):
+    """Raised when an illegal lifecycle state transition is attempted."""
+
+    def __init__(self, detail: str, details: dict[str, Any] | None = None) -> None:
+        super().__init__(detail, details)
+        self.detail = detail
