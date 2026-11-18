@@ -1,5 +1,5 @@
 # Multi-stage production Dockerfile for TraceMind AI Frontend
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 

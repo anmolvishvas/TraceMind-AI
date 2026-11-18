@@ -1,12 +1,13 @@
 """Shared dependency injection providers."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator
 
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.core.redis import get_redis_client
+from app.core.redis import RedisClient, get_redis_client
 
 
 async def get_db_session() -> AsyncIterator[AsyncSession]:
@@ -15,7 +16,7 @@ async def get_db_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-async def get_redis() -> AsyncIterator[Redis[str]]:
+async def get_redis() -> AsyncIterator[RedisClient]:
     """Provide active async Redis client."""
     async for redis in get_redis_client():
         yield redis

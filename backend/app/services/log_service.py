@@ -1,18 +1,27 @@
 """Service for high-throughput log persistence and real-time operational metrics."""
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-import redis.asyncio as aioredis
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.log_event import LogEventModel
 from app.schemas.log_event import CanonicalLogEvent
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
+
+    RedisClient = Redis[str]
+else:
+    RedisClient = Any
 
 logger = logging.getLogger("tracemind.services.log")
 
@@ -37,7 +46,7 @@ class LogService:
     and updating Redis rolling metric counters atomically.
     """
 
-    def __init__(self, db: AsyncSession, redis_client: aioredis.Redis[str] | None = None) -> None:
+    def __init__(self, db: AsyncSession, redis_client: RedisClient | None = None) -> None:
         self.db = db
         self.redis = redis_client
 

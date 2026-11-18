@@ -1,24 +1,32 @@
 """Asynchronous Redis client and sliding-window counter utilities."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import redis.asyncio as aioredis
-from redis.asyncio import Redis
 
 from app.core.config import get_settings
+
+if TYPE_CHECKING:
+    from redis.asyncio import Redis
+
+    RedisClient = Redis[str]
+else:
+    RedisClient = Any
 
 logger = logging.getLogger("tracemind.redis")
 
 settings = get_settings()
 
-_redis_client: Redis[str] | None = None
+_redis_client: RedisClient | None = None
 _client_loop: asyncio.AbstractEventLoop | None = None
 
 
-def get_redis_pool() -> Redis[str]:
+def get_redis_pool() -> RedisClient:
     """Initialize or return the global Redis client pool bound to the active loop."""
     global _redis_client, _client_loop
     try:
@@ -55,7 +63,7 @@ async def close_redis() -> None:
             logger.info("Redis connection pool closed.")
 
 
-async def get_redis_client() -> AsyncIterator[Redis[str]]:
+async def get_redis_client() -> AsyncIterator[RedisClient]:
     """Dependency injection generator yielding an async Redis client."""
     client = get_redis_pool()
     yield client
