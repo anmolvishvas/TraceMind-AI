@@ -1,0 +1,53 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: 'docs/**'
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/**'
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: 'frontend/**'
+
+log-processing:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/log_processing/**'
+
+anomaly-detection:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/anomaly_detection/**'
+
+incident-management:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/incidents/**'
+
+rag:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/rag/**'
+
+mcp:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/mcp/**'
+
+llm:
+  - changed-files:
+      - any-glob-to-any-file: 'backend/app/llm/**'
+
+infrastructure:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docker-compose.yml'
+          - '**/Dockerfile'
+          - '.dockerignore'
+
+ci/cd:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'backend/tests/**'
+          - '**/test/**'
+          - '**/tests/**'
