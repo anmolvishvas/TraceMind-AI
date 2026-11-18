@@ -1,4 +1,3 @@
-import React from "react";
 import { Activity, AlertTriangle, ShieldCheck, Cpu, Terminal, FileText } from "lucide-react";
 
 export default function App(): JSX.Element {
