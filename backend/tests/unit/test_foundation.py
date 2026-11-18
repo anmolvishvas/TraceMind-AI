@@ -1,10 +1,16 @@
 from datetime import UTC, datetime
 
-import pytest
 from httpx import AsyncClient
+import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings, get_settings
+from app.core.exceptions import (
+    DatabaseConnectionError,
+    FileValidationException,
+    RedisConnectionError,
+    TraceMindBaseException,
+)
 from app.schemas.log_event import CanonicalLogEvent
 
 
@@ -27,6 +33,20 @@ def test_settings_override() -> None:
     )
     assert custom_settings.ENVIRONMENT == "production"
     assert "db.prod.internal:5433" in custom_settings.async_database_url
+
+
+def test_domain_exception_hierarchy() -> None:
+    """Test that custom domain exceptions inherit from TraceMindBaseException."""
+    exc = DatabaseConnectionError("Failed to reach DB", details={"host": "localhost"})
+    assert isinstance(exc, TraceMindBaseException)
+    assert exc.message == "Failed to reach DB"
+    assert exc.details == {"host": "localhost"}
+
+    redis_exc = RedisConnectionError("Redis down")
+    assert isinstance(redis_exc, TraceMindBaseException)
+
+    file_exc = FileValidationException("File too large")
+    assert isinstance(file_exc, TraceMindBaseException)
 
 
 def test_canonical_log_event_schema_valid() -> None:
@@ -79,3 +99,15 @@ async def test_healthz_endpoint(async_client: AsyncClient) -> None:
     assert data["project"] == "TraceMind AI"
     assert data["version"] == "0.1.0"
     assert "environment" in data
+
+
+@pytest.mark.asyncio
+async def test_readyz_endpoint(async_client: AsyncClient) -> None:
+    """Test the /api/v1/health/readyz readiness endpoint."""
+    response = await async_client.get("/api/v1/health/readyz")
+    # Response code is either 200 (services ready) or 503 (not ready during local mock test)
+    assert response.status_code in (200, 503)
+    data = response.json()
+    assert "status" in data
+    assert "database" in data
+    assert "redis" in data

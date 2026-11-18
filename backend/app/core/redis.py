@@ -1,0 +1,63 @@
+"""Asynchronous Redis client and sliding-window counter utilities."""
+
+from collections.abc import AsyncIterator
+import logging
+from typing import Any
+
+import redis.asyncio as aioredis
+from redis.asyncio import Redis
+
+from app.core.config import get_settings
+
+logger = logging.getLogger("tracemind.redis")
+
+settings = get_settings()
+
+_redis_client: Redis | None = None
+
+
+def get_redis_pool() -> Redis:
+    """Initialize or return the global Redis client pool."""
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+            socket_timeout=2.0,
+            socket_connect_timeout=3.0,
+        )
+    return _redis_client
+
+
+async def close_redis() -> None:
+    """Close active Redis connection pool gracefully."""
+    global _redis_client
+    if _redis_client is not None:
+        await _redis_client.close()
+        _redis_client = None
+        logger.info("Redis connection pool closed.")
+
+
+async def get_redis_client() -> AsyncIterator[Redis]:
+    """Dependency injection generator yielding an async Redis client."""
+    client = get_redis_pool()
+    yield client
+
+
+async def check_redis_health() -> dict[str, Any]:
+    """Execute Redis ping probe to verify connectivity."""
+    try:
+        client = get_redis_pool()
+        ping_result = await client.ping()
+        return {
+            "status": "healthy" if ping_result else "unhealthy",
+            "connected": bool(ping_result),
+        }
+    except Exception as exc:
+        logger.warning("Redis health check failed: %s", exc)
+        return {
+            "status": "unhealthy",
+            "connected": False,
+            "error": str(exc),
+        }
