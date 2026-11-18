@@ -2,11 +2,38 @@ from collections.abc import AsyncIterator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 
+import app.models  # noqa: F401
+from app.core.database import Base, engine
+from app.core.redis import close_redis
 from app.main import create_app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session", autouse=True)
+async def setup_test_tables() -> AsyncIterator[None]:
+    """Ensure database schema is created for integration tests when DB is available."""
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception:
+        # Gracefully proceed if running in isolated unit test environment without active DB
+        pass
+    yield
+    await engine.dispose()
+    await close_redis()
+
+
+@pytest.fixture(autouse=True)
+async def cleanup_connections() -> AsyncIterator[None]:
+    """Tear down connection pools between tests to avoid event loop crosstalk."""
+    yield
+    await engine.dispose()
+    await close_redis()
+
+
+@pytest.fixture(scope="session")
 async def async_client() -> AsyncIterator[AsyncClient]:
     """Provide an asynchronous HTTP test client bound to the FastAPI app."""
     app = create_app()

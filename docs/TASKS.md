@@ -87,7 +87,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 2
 
 ### Tasks:
-- [ ] **TASK-2.1: Canonical Log Event Schema & Validation**
+- [x] **TASK-2.1: Canonical Log Event Schema & Validation**
   - **Description:** Define the canonical Pydantic v2 `CanonicalLogEvent` and SQLAlchemy database models, including UUIDv7 event IDs, UTC timestamps, severity enums, and structured metadata.
   - **Dependencies:** TASK-1.3.
   - **Files/Modules:** `backend/app/schemas/log_event.py`, `backend/app/models/log_event.py`.
@@ -95,7 +95,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_log_schemas.py`.
   - **Deliverable:** Canonical log event schema contract.
 
-- [ ] **TASK-2.2: File Upload Validation & Streaming Reader**
+- [x] **TASK-2.2: File Upload Validation & Streaming Reader**
   - **Description:** Implement multipart file upload endpoint (`POST /api/v1/logs/upload`) with strict MIME validation, magic byte checks, $100\text{ MB}$ size ceiling, and chunked streaming iterators ($O(1)$ memory).
   - **Dependencies:** TASK-2.1.
   - **Files/Modules:** `backend/app/log_processing/validator.py`, `backend/app/api/v1/endpoints/logs.py`.
@@ -103,7 +103,7 @@ flowchart LR
   - **Tests:** `backend/tests/integration/test_upload_validation.py`.
   - **Deliverable:** Hardened file ingestion endpoint.
 
-- [ ] **TASK-2.3: Multi-Format Parser Engine**
+- [x] **TASK-2.3: Multi-Format Parser Engine**
   - **Description:** Develop dedicated parsers for JSON logs (Bunyan/Zap), Python standard logging, Java Log4j/Logback stack traces, Nginx access logs, and Docker container output.
   - **Dependencies:** TASK-2.1.
   - **Files/Modules:** `backend/app/log_processing/parsers/*.py`.
@@ -111,7 +111,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_parsers.py` (with fixtures for all formats).
   - **Deliverable:** Pluggable parsing strategy suite.
 
-- [ ] **TASK-2.4: Deterministic Error Signature Fingerprinter**
+- [x] **TASK-2.4: Deterministic Error Signature Fingerprinter**
   - **Description:** Build normalizer to strip memory addresses (`0x...`), line numbers, and timestamps from stack traces and generate SHA-256 `error_signature` hashes.
   - **Dependencies:** TASK-2.3.
   - **Files/Modules:** `backend/app/log_processing/fingerprinter.py`.
@@ -119,7 +119,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_fingerprinter.py`.
   - **Deliverable:** Error signature generation module.
 
-- [ ] **TASK-2.5: PII Scrubber & Secret Sanitizer**
+- [x] **TASK-2.5: PII Scrubber & Secret Sanitizer**
   - **Description:** Implement regex sanitizers to mask credit card numbers, JWT tokens, AWS access keys, and passwords prior to storage.
   - **Dependencies:** TASK-2.1.
   - **Files/Modules:** `backend/app/core/security.py`.
@@ -127,7 +127,7 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_pii_scrubber.py`.
   - **Deliverable:** Enterprise data privacy sanitizer.
 
-- [ ] **TASK-2.6: Micro-Batch Log Persistence & Redis Rolling Counters**
+- [x] **TASK-2.6: Micro-Batch Log Persistence & Redis Rolling Counters**
   - **Description:** Stream canonical events into bounded micro-batches (500 records) for multi-row insertion into PostgreSQL while updating Redis rolling counters (1m, 5m, 15m).
   - **Dependencies:** TASK-2.3, TASK-2.4.
   - **Files/Modules:** `backend/app/services/log_service.py`.

@@ -68,6 +68,7 @@ select = [
 ]
 ignore = [
     "B008", # do not perform function calls in argument defaults (FastAPI Depends)
+    "E501", # line too long (handled by ruff format / long string literals)
 ]
 
 [tool.mypy]
@@ -86,6 +87,7 @@ warn_unused_ignores = true
 module = [
     "asyncpg.*",
     "pgvector.*",
+    "redis.*",
     "scipy.*",
     "sklearn.*",
     "mcp.*",
@@ -98,7 +100,8 @@ minversion = "8.0"
 addopts = "-ra -q --strict-markers"
 testpaths = ["tests"]
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [tool.coverage.run]
 source = ["app"]
