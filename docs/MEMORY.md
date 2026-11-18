@@ -16,24 +16,24 @@
 TraceMind AI is a production-grade, portfolio-defining incident intelligence and root cause analysis platform. It combines high-throughput streaming log normalization, deterministic statistical anomaly detection (Z-score, IQR, Isolation Forest), multi-dimensional incident correlation, official Model Context Protocol (MCP) tool integration, and evidence-grounded Retrieval-Augmented Generation (RAG) using PostgreSQL and `pgvector`.
 
 ### Current Development Status
-- **Current Phase:** **Phase 3: Anomaly Detection and Incident Correlation** (Active)
+- **Current Phase:** **Phase 3: Anomaly Detection and Incident Correlation** (Complete — PR Ready)
 - **Completed Milestones:**
   - Complete architecture, PRD, engineering rulebook, UI/UX specification, implementation roadmap, and living journal authored in `docs/`.
   - Brand assets and official logo integrated (`assets/logo.png`).
   - Production GitHub Actions CI/CD workflows authored (`.github/workflows/ci.yml`, `.github/workflows/pr-audit.yml`).
   - Pull Request #1 successfully merged into `main` with 100% green checks across all 6 CI matrix jobs.
   - Pull Request #2 merged into `main` with full async database, Redis pool, domain exceptions, and readiness health probes.
-  - **Phase 2 Completed (Log Ingestion and Processing):**
-    - `LogEventModel` SQLAlchemy 2.0 ORM model with composite time-series indexes.
-    - Alembic migration `0002_create_log_events_table.py`.
-    - PII Scrubber & Secret Sanitizer (`app/core/security.py`) redacting AWS keys, OpenAI keys, GitHub tokens, JWTs, Bearer tokens, URLs with credentials, password key-values, and credit cards.
-    - Deterministic Error Signature Fingerprinter (`app/log_processing/fingerprinter.py`) stripping memory addresses, timestamps, UUIDs, and paths to generate SHA-256 signatures.
-    - Multi-format parser engine (`app/log_processing/parsers/`): JSON (Bunyan, Zap, Winston), Python with multi-line traceback stitching, Java with Spring Boot stack frame stitching, Nginx access/error logs, and Docker container streams.
-    - File upload validator & constant-memory streaming reader (`app/log_processing/validator.py`).
-    - Micro-batch persistence & Redis rolling metric counters (`app/services/log_service.py`).
-    - REST API endpoints (`/api/v1/logs/upload`, `/api/v1/logs/search`, `/api/v1/logs/{event_id}`).
-    - Full suite of unit and integration tests with >90% coverage.
-- **Immediate Next Focus:** Phase 3 Anomaly Detection and Incident Correlation (Z-score, IQR, Isolation Forest, sliding window aggregators, trace ID/time-window clustering).
+  - Pull Request #3 merged into `main` delivering streaming multi-format log parsing, PII scrubber, deterministic error fingerprinter, and micro-batch persistence.
+  - **Phase 3 Completed (Anomaly Detection & Incident Correlation):**
+    - Statistical Baseline Calculator (`HistoricalBaselineCalculator` in `app/anomaly_detection/baseline.py`) computing rolling EMA, variance, standard deviation, and IQR per service with Redis caching.
+    - Pure numerical statistical detectors (`app/anomaly_detection/statistical.py`): Z-Score ($> 3\sigma$), IQR (Tukey's fences), Scikit-Learn Isolation Forest, and Composite Ensemble Consensus (100% decoupled from LLMs).
+    - Multi-dimensional incident correlation engine (`IncidentCorrelator` in `app/incidents/correlator.py`) clustering events via distributed trace IDs (`CONFIRMED_CAUSAL`), error signature bursts, service dependency topology, and sliding temporal windows.
+    - Incident Lifecycle State Machine (`IncidentLifecycleManager` in `app/incidents/state_machine.py`) governing transitions and enforcing human-in-the-loop validation for incident resolution (bots/automated resolution prohibited).
+    - Chronological incident timeline generator (`IncidentTimelineGenerator` in `app/incidents/timeline.py`) marking genesis triggers, root exceptions, cascading propagation, and peak impact.
+    - Alembic migration `0003_create_incidents_and_anomalies_tables.py` for `incidents`, `incident_correlations`, and `anomalies`.
+    - REST API endpoints for anomaly detection and incident lifecycle (`/api/v1/anomalies/detect`, `/api/v1/anomalies`, `/api/v1/incidents/correlate`, `/api/v1/incidents`, `/api/v1/incidents/{id}`, `/api/v1/incidents/{id}/timeline`, `/api/v1/incidents/{id}/status`).
+    - 84 unit and integration tests passing.
+- **Immediate Next Focus:** Phase 4 RAG and LLM Intelligence (Runbook & Post-Mortem vector embedding, PostgreSQL `pgvector` HNSW search, evidence-grounded LLM root cause analysis with mandatory log citations).
 
 ---
 
@@ -43,8 +43,8 @@ TraceMind AI is a production-grade, portfolio-defining incident intelligence and
 | :--- | :--- | :--- | :--- | :--- |
 | **Foundation & Scaffolding** | Phase 1 | 🟢 Done | Architecture / DevOps | Sprint 1 |
 | **Log Ingestion & Parsing** | Phase 2 | 🟢 Done | Backend / Data | Sprint 2 |
-| **Statistical Anomaly & Correlation**| Phase 3 | 🟡 In Progress | ML / SRE | Sprint 3 |
-| **RAG & LLM RCA Engine** | Phase 4 | ⚪ Pending | AI / Backend | Sprint 4 |
+| **Statistical Anomaly & Correlation**| Phase 3 | 🟢 Done | ML / SRE | Sprint 3 |
+| **RAG & LLM RCA Engine** | Phase 4 | 🟡 Next | AI / Backend | Sprint 4 |
 | **Official Python MCP Server** | Phase 5 | ⚪ Pending | AI / Integration | Sprint 5 |
 | **React Dashboard & UI** | Phase 6 | ⚪ Pending | Frontend / Design | Sprint 6 |
 | **Production Readiness & Hardening**| Phase 7 | ⚪ Pending | SRE / Security | Sprint 7 |

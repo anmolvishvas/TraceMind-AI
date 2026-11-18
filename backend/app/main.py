@@ -2,12 +2,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
+from app.core.exceptions import EntityNotFoundError, InvalidStateTransitionError
 from app.core.redis import close_redis
 
 
@@ -61,6 +63,22 @@ def create_app() -> FastAPI:
 
     # Mount API v1 router
     application.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
+
+    @application.exception_handler(EntityNotFoundError)
+    async def entity_not_found_handler(request: Request, exc: EntityNotFoundError) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": exc.message, "details": exc.details},
+        )
+
+    @application.exception_handler(InvalidStateTransitionError)
+    async def invalid_transition_handler(
+        request: Request, exc: InvalidStateTransitionError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": exc.detail, "details": exc.details},
+        )
 
     return application
 

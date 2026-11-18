@@ -4,6 +4,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+LogLevel = Literal["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"]
+
 
 class CanonicalLogEvent(BaseModel):
     """
@@ -19,7 +21,7 @@ class CanonicalLogEvent(BaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="Normalized UTC ISO-8601 timestamp of event emission",
     )
-    severity: Literal["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"] = Field(
+    severity: LogLevel = Field(
         ...,
         description="Normalized log level",
     )
