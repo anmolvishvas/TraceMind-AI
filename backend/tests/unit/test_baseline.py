@@ -73,3 +73,58 @@ async def test_baseline_redis_fallback() -> None:
     assert baseline.service_name == "cart-service"
     assert baseline.mean == 3.0
     assert baseline.sample_size == 5
+
+
+def test_ema_empty_list() -> None:
+    """Verify EMA on empty list returns empty list."""
+    assert HistoricalBaselineCalculator.compute_exponential_moving_average([]) == []
+
+
+@pytest.mark.asyncio
+async def test_baseline_redis_hit() -> None:
+    """Verify get_or_create_service_baseline returns cached baseline on hit."""
+    from unittest.mock import AsyncMock
+
+    mock_redis = AsyncMock()
+    cached = (
+        '{"service_name": "cached-service", "metric_name": "error_rate", '
+        '"window_hours": 168, "mean": 12.0, "std_dev": 1.5, "median": 12.0, '
+        '"iqr": 2.0, "q1": 11.0, "q3": 13.0, "sample_size": 100, '
+        '"updated_at": "2026-11-18T12:00:00Z"}'
+    )
+    mock_redis.get.return_value = cached
+
+    calc = HistoricalBaselineCalculator(redis_client=mock_redis)
+    baseline = await calc.get_or_create_service_baseline("cached-service")
+
+    assert baseline.service_name == "cached-service"
+    assert baseline.mean == 12.0
+    mock_redis.get.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_baseline_redis_miss_and_exceptions() -> None:
+    """Verify get_or_create_service_baseline handles miss and redis exceptions gracefully."""
+    from unittest.mock import AsyncMock
+
+    mock_redis = AsyncMock()
+    mock_redis.get.return_value = None
+
+    calc = HistoricalBaselineCalculator(redis_client=mock_redis)
+    baseline = await calc.get_or_create_service_baseline(
+        "miss-service", fallback_series=[10.0, 10.0]
+    )
+    assert baseline.service_name == "miss-service"
+    mock_redis.set.assert_awaited_once()
+
+    # Second test: Redis raises exceptions on both get and set
+    mock_redis_err = AsyncMock()
+    mock_redis_err.get.side_effect = ConnectionError("Redis down")
+    mock_redis_err.set.side_effect = ConnectionError("Redis down")
+
+    calc_err = HistoricalBaselineCalculator(redis_client=mock_redis_err)
+    baseline_err = await calc_err.get_or_create_service_baseline(
+        "err-service", fallback_series=[5.0, 5.0]
+    )
+    assert baseline_err.service_name == "err-service"
+    assert baseline_err.mean == 5.0
