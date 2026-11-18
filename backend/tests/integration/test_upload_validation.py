@@ -67,3 +67,21 @@ async def test_stream_log_lines_enforces_size_limit() -> None:
     with pytest.raises(FileValidationException) as exc_info:
         _ = [line async for line in stream_log_lines(stream, chunk_size=64, max_total_bytes=512)]
     assert "maximum limit" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_validate_upload_empty_file() -> None:
+    """Ensure upload validation raises FileValidationException on empty files."""
+    from unittest.mock import AsyncMock
+
+    from fastapi import UploadFile
+
+    validator = FileUploadValidator()
+    mock_file = AsyncMock(spec=UploadFile)
+    mock_file.filename = "app.log"
+    mock_file.read.return_value = b""
+    mock_file.size = 0
+
+    with pytest.raises(FileValidationException) as exc_info:
+        await validator.validate_upload(mock_file)
+    assert "empty" in str(exc_info.value)

@@ -21,7 +21,7 @@ JAVA_LOG_PATTERN: Final[re.Pattern[str]] = re.compile(
 )
 
 JAVA_STACK_FRAME_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"^(?:\tat\s+|Caused by:\s+|org\.|com\.|java\.|javax\.|jakarta\.|net\.|io\.|[A-Za-z0-9_.]+(?:Exception|Error|Throwable):|\s*\.\.\.\s*\d+\s+more)"
+    r"^(?:at\s+|Caused by:\s+|org\.|com\.|java\.|javax\.|jakarta\.|net\.|io\.|[A-Za-z0-9_.]+(?:Exception|Error|Throwable)|(?:\.\.\.\s*\d+\s+more))"
 )
 
 JAVA_EXCEPTION_NAME_PATTERN: Final[re.Pattern[str]] = re.compile(

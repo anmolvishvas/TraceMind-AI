@@ -253,3 +253,65 @@ def test_json_parser_extended_fields() -> None:
     assert event.span_id == "sp-456"
     assert event.line_number == 42
     assert event.exception_type == "TimeoutException"
+
+
+def test_base_parser_stream_methods() -> None:
+    """Test BaseLogParser stream iteration methods."""
+    parser = JsonLogParser(service_name="stream-svc")
+    lines = [
+        '{"timestamp": "2026-11-18T10:00:00Z", "level": "info", "msg": "Event 1"}',
+        "",
+        '{"timestamp": "2026-11-18T10:00:01Z", "level": "info", "msg": "Event 2"}',
+    ]
+    events = list(parser.parse_stream(iter(lines), source_file="stream.log"))
+    assert len(events) == 2
+
+
+@pytest.mark.asyncio
+async def test_base_parser_async_stream_method() -> None:
+    """Test BaseLogParser async stream iteration."""
+    parser = JsonLogParser(service_name="async-base-svc")
+
+    async def gen_lines() -> AsyncIterator[str]:
+        yield '{"timestamp": "2026-11-18T10:00:00Z", "level": "info", "msg": "Async 1"}'
+        yield ""
+        yield '{"timestamp": "2026-11-18T10:00:01Z", "level": "info", "msg": "Async 2"}'
+
+    events = [e async for e in parser.parse_async_stream(gen_lines())]
+    assert len(events) == 2
+
+
+def test_docker_parser_edge_cases() -> None:
+    """Test DockerLogParser handling direct JSON lines, invalid JSON, and non-error stderr."""
+    parser = DockerLogParser(service_name="edge-docker")
+
+    # Direct JSON line without docker prefix
+    event_direct = parser.parse_line('{"msg": "Direct JSON", "level": "info"}')
+    assert event_direct is not None
+    assert event_direct.message == "Direct JSON"
+
+    # Non-JSON plain line
+    event_plain = parser.parse_line("Random non-docker string")
+    assert event_plain is not None
+    assert event_plain.message == "Random non-docker string"
+
+    # Docker stderr without error keyword
+    line_stderr = "2026-11-18T10:35:00.000Z stderr F Download progress 50%"
+    event_stderr = parser.parse_line(line_stderr)
+    assert event_stderr is not None
+    assert event_stderr.severity == "WARN"
+
+    # Docker stdout with invalid JSON
+    line_bad_json = "2026-11-18T10:35:00.000Z stdout F {invalid json payload}"
+    event_bad = parser.parse_line(line_bad_json)
+    assert event_bad is not None
+    assert "{invalid json payload}" in event_bad.message
+
+
+def test_nginx_parser_fallback_line() -> None:
+    """Verify fallback handling for non-matching Nginx log lines."""
+    parser = NginxLogParser(service_name="nginx-edge")
+    event = parser.parse_line("Non-standard Nginx raw line")
+    assert event is not None
+    assert event.message == "Non-standard Nginx raw line"
+    assert event.severity == "INFO"
