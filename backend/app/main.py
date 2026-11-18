@@ -6,7 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from app.api.v1.router import api_v1_router
 from app.core.config import get_settings
+from app.core.redis import close_redis
 
 
 class HealthResponse(BaseModel):
@@ -20,10 +22,11 @@ class HealthResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Application lifecycle context manager for resource init and teardown."""
-    # Lifecycle startup hooks (DB pools, Redis connections) will attach here
+    """Application lifecycle context manager for resource initialization and teardown."""
+    # Startup hooks
     yield
-    # Lifecycle shutdown hooks
+    # Shutdown hooks: gracefully release Redis client pool
+    await close_redis()
 
 
 def create_app() -> FastAPI:
@@ -45,15 +48,19 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Liveness probe (root level)
     @application.get("/healthz", response_model=HealthResponse, tags=["Health"])
     async def healthcheck() -> dict[str, Any]:
-        """Liveness and readiness health probe."""
+        """Liveness probe verifying the API gateway process is running."""
         return {
             "status": "healthy",
             "project": settings.PROJECT_NAME,
             "version": settings.VERSION,
             "environment": settings.ENVIRONMENT,
         }
+
+    # Mount API v1 router
+    application.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
 
     return application
 

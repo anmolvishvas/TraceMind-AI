@@ -1,10 +1,26 @@
 from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
 from pydantic import ValidationError
 
+from app.api.deps import get_db_session, get_redis
 from app.core.config import Settings, get_settings
+from app.core.database import check_database_health
+from app.core.exceptions import (
+    AnomalyDetectionException,
+    DatabaseConnectionError,
+    FileValidationException,
+    IncidentCorrelationException,
+    LLMInferenceException,
+    LogParsingException,
+    MCPToolException,
+    RAGRetrievalException,
+    RedisConnectionError,
+    TraceMindBaseException,
+)
+from app.core.redis import check_redis_health
 from app.schemas.log_event import CanonicalLogEvent
 
 
@@ -27,6 +43,24 @@ def test_settings_override() -> None:
     )
     assert custom_settings.ENVIRONMENT == "production"
     assert "db.prod.internal:5433" in custom_settings.async_database_url
+
+
+def test_domain_exception_hierarchy() -> None:
+    """Test that all domain exceptions inherit from TraceMindBaseException."""
+    exceptions = [
+        DatabaseConnectionError("DB error", details={"host": "localhost"}),
+        RedisConnectionError("Redis error"),
+        FileValidationException("Invalid file"),
+        LogParsingException("Parse error"),
+        AnomalyDetectionException("Anomaly error"),
+        IncidentCorrelationException("Correlation error"),
+        RAGRetrievalException("RAG error"),
+        LLMInferenceException("LLM error"),
+        MCPToolException("MCP error"),
+    ]
+    for exc in exceptions:
+        assert isinstance(exc, TraceMindBaseException)
+        assert exc.message is not None
 
 
 def test_canonical_log_event_schema_valid() -> None:
@@ -70,6 +104,43 @@ def test_canonical_log_event_empty_service_name() -> None:
 
 
 @pytest.mark.asyncio
+async def test_api_deps_providers() -> None:
+    """Verify that get_db_session and get_redis yield active resources."""
+    db_gen = get_db_session()
+    session = await anext(db_gen)
+    assert session is not None
+    await session.close()
+
+    redis_gen = get_redis()
+    client = await anext(redis_gen)
+    assert client is not None
+
+
+@pytest.mark.asyncio
+async def test_check_database_health_failure_branch() -> None:
+    """Test the failure branch of check_database_health."""
+    mock_engine = MagicMock()
+    mock_engine.connect.side_effect = RuntimeError("Connection refused")
+    with patch("app.core.database.engine", mock_engine):
+        health = await check_database_health()
+        assert health["status"] == "unhealthy"
+        assert health["connected"] is False
+        assert "error" in health
+
+
+@pytest.mark.asyncio
+async def test_check_redis_health_failure_branch() -> None:
+    """Test the failure branch of check_redis_health."""
+    mock_client = AsyncMock()
+    mock_client.ping.side_effect = RuntimeError("Redis timeout")
+    with patch("app.core.redis.get_redis_pool", return_value=mock_client):
+        health = await check_redis_health()
+        assert health["status"] == "unhealthy"
+        assert health["connected"] is False
+        assert "error" in health
+
+
+@pytest.mark.asyncio
 async def test_healthz_endpoint(async_client: AsyncClient) -> None:
     """Test the /healthz liveness endpoint."""
     response = await async_client.get("/healthz")
@@ -79,3 +150,14 @@ async def test_healthz_endpoint(async_client: AsyncClient) -> None:
     assert data["project"] == "TraceMind AI"
     assert data["version"] == "0.1.0"
     assert "environment" in data
+
+
+@pytest.mark.asyncio
+async def test_readyz_endpoint(async_client: AsyncClient) -> None:
+    """Test the /api/v1/health/readyz readiness endpoint."""
+    response = await async_client.get("/api/v1/health/readyz")
+    assert response.status_code in (200, 503)
+    data = response.json()
+    assert "status" in data
+    assert "database" in data
+    assert "redis" in data

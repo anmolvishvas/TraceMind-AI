@@ -31,31 +31,31 @@ flowchart LR
 - **Estimated Duration:** Sprint 1
 
 ### Tasks:
-- [ ] **TASK-1.1: Core Repository Layout & Packaging Setup**
+- [x] **TASK-1.1: Core Repository Layout & Packaging Setup**
   - **Description:** Initialize backend and frontend workspace directories using standard Python packaging conventions. Configure `pyproject.toml` with Ruff, mypy (strict), and pytest configurations.
   - **Dependencies:** None.
   - **Files/Modules:** `pyproject.toml`, `.gitignore`, `backend/app/__init__.py`.
   - **Acceptance Criteria:** `ruff check .`, `mypy backend`, and `pytest` execute successfully via CLI.
-  - **Tests:** `backend/tests/unit/test_scaffolding.py`.
+  - **Tests:** `backend/tests/unit/test_foundation.py`.
   - **Deliverable:** Working Python packaging and tooling foundation.
 
-- [ ] **TASK-1.2: Environment Configuration & Pydantic Settings**
+- [x] **TASK-1.2: Environment Configuration & Pydantic Settings**
   - **Description:** Implement `app/core/config.py` using Pydantic v2 `BaseSettings` to load database URLs, Redis hosts, OpenAI API keys, token limits, and security secrets from environment variables.
   - **Dependencies:** TASK-1.1.
   - **Files/Modules:** `backend/app/core/config.py`.
   - **Acceptance Criteria:** Settings parse valid environment variables; invalid types raise descriptive validation errors.
-  - **Tests:** `backend/tests/unit/test_config.py`.
+  - **Tests:** `backend/tests/unit/test_foundation.py`.
   - **Deliverable:** Strongly typed configuration module.
 
-- [ ] **TASK-1.3: Asynchronous Database & pgvector Integration**
+- [x] **TASK-1.3: Asynchronous Database & pgvector Integration**
   - **Description:** Configure SQLAlchemy 2.0 async engine and sessionmaker using `asyncpg`. Enable PostgreSQL `vector` extension and configure Alembic for database migrations.
   - **Dependencies:** TASK-1.2.
-  - **Files/Modules:** `backend/app/core/database.py`, `backend/alembic.ini`, `backend/alembic/env.py`.
+  - **Files/Modules:** `backend/app/core/database.py`, `backend/alembic.ini`, `backend/alembic/env.py`, `backend/alembic/versions/0001_enable_pgvector_extension.py`.
   - **Acceptance Criteria:** Database connection pool initializes; Alembic applies `vector` extension migration without error.
   - **Tests:** `backend/tests/integration/test_database.py`.
   - **Deliverable:** Operational async database connection layer.
 
-- [ ] **TASK-1.4: Redis Connection & Cache Client**
+- [x] **TASK-1.4: Redis Connection & Cache Client**
   - **Description:** Set up asynchronous Redis connection pool with connection health checks, retry policies, and helper methods for key expiration and sliding window counters.
   - **Dependencies:** TASK-1.2.
   - **Files/Modules:** `backend/app/core/redis.py`.
@@ -63,15 +63,15 @@ flowchart LR
   - **Tests:** `backend/tests/integration/test_redis.py`.
   - **Deliverable:** High-performance async Redis client.
 
-- [ ] **TASK-1.5: FastAPI Application Factory & Health Endpoints**
-  - **Description:** Construct the FastAPI application factory (`create_app`) with global exception handlers, CORS middleware, OpenTelemetry request instrumentation, and `/healthz` endpoints.
+- [x] **TASK-1.5: FastAPI Application Factory & Health Endpoints**
+  - **Description:** Construct the FastAPI application factory (`create_app`) with global exception handlers, CORS middleware, OpenTelemetry request instrumentation, and `/healthz` & `/api/v1/health/readyz` endpoints.
   - **Dependencies:** TASK-1.3, TASK-1.4.
-  - **Files/Modules:** `backend/app/main.py`, `backend/app/api/v1/endpoints/health.py`.
-  - **Acceptance Criteria:** `GET /healthz` returns `200 OK` with database and Redis operational status.
-  - **Tests:** `backend/tests/integration/test_health.py`.
+  - **Files/Modules:** `backend/app/main.py`, `backend/app/api/v1/endpoints/health.py`, `backend/app/api/v1/router.py`.
+  - **Acceptance Criteria:** `GET /healthz` and `GET /api/v1/health/readyz` return expected payloads with database and Redis operational status.
+  - **Tests:** `backend/tests/unit/test_foundation.py`.
   - **Deliverable:** Core web service responding to health checks.
 
-- [ ] **TASK-1.6: Docker Compose Multi-Container Orchestration**
+- [x] **TASK-1.6: Docker Compose Multi-Container Orchestration**
   - **Description:** Author production-ready `docker-compose.yml` orchestrating PostgreSQL 16 with `pgvector`, Redis 7.2-alpine, the FastAPI backend, and frontend containers with volume persistence and health checks.
   - **Dependencies:** TASK-1.5.
   - **Files/Modules:** `docker-compose.yml`, `backend/Dockerfile`, `frontend/Dockerfile`.
