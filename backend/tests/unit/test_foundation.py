@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from httpx import AsyncClient
 from pydantic import ValidationError
-import pytest
 
 from app.api.deps import get_db_session, get_redis
 from app.core.config import Settings, get_settings
@@ -119,7 +119,9 @@ async def test_api_deps_providers() -> None:
 @pytest.mark.asyncio
 async def test_check_database_health_failure_branch() -> None:
     """Test the failure branch of check_database_health."""
-    with patch("app.core.database.engine.connect", side_effect=RuntimeError("Connection refused")):
+    mock_engine = MagicMock()
+    mock_engine.connect.side_effect = RuntimeError("Connection refused")
+    with patch("app.core.database.engine", mock_engine):
         health = await check_database_health()
         assert health["status"] == "unhealthy"
         assert health["connected"] is False
