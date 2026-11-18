@@ -1,5 +1,9 @@
 """Unit tests for the multi-format log parser engine."""
 
+from collections.abc import AsyncIterator
+
+import pytest
+
 from app.log_processing.parsers.base import normalize_severity, parse_timestamp
 from app.log_processing.parsers.docker_parser import DockerLogParser
 from app.log_processing.parsers.factory import detect_log_format, get_log_parser
@@ -184,3 +188,68 @@ def test_parser_factory_detection() -> None:
     # Instantiation
     parser = get_log_parser(sample_lines=json_samples)
     assert isinstance(parser, JsonLogParser)
+    assert isinstance(get_log_parser(format_hint="docker"), DockerLogParser)
+    assert isinstance(get_log_parser(format_hint="java"), JavaLogParser)
+    assert isinstance(get_log_parser(format_hint="nginx"), NginxLogParser)
+    assert isinstance(get_log_parser(format_hint="python"), PythonLogParser)
+    assert isinstance(get_log_parser(sample_lines=[]), PythonLogParser)
+
+
+@pytest.mark.asyncio
+async def test_python_log_parser_async_stream() -> None:
+    """Verify parse_async_stream on PythonLogParser."""
+    parser = PythonLogParser(service_name="async-service")
+
+    async def async_lines() -> AsyncIterator[str]:
+        lines = [
+            "2026-11-18 10:15:30,123 [INFO] worker: Hello",
+            "2026-11-18 10:15:31,456 [ERROR] worker: Failed",
+            "Traceback (most recent call last):",
+            "  File 'test.py', line 1, in <module>",
+            "RuntimeError: Boom",
+            "2026-11-18 10:15:32,000 [INFO] worker: Done",
+        ]
+        for line in lines:
+            yield line
+
+    events = [e async for e in parser.parse_async_stream(async_lines())]
+    assert len(events) == 3
+    assert events[1].exception_type == "RuntimeError"
+    assert events[1].stack_trace is not None
+
+
+@pytest.mark.asyncio
+async def test_java_log_parser_async_stream() -> None:
+    """Verify parse_async_stream on JavaLogParser."""
+    parser = JavaLogParser(service_name="async-java")
+
+    async def async_lines() -> AsyncIterator[str]:
+        lines = [
+            "2026-11-18 10:20:00.000 [main] INFO com.example.App - Ready",
+            "2026-11-18 10:20:05.123 [main] ERROR com.example.App - Error in query",
+            "java.lang.NullPointerException: Object is null",
+            "\tat com.example.App.process(App.java:10)",
+            "2026-11-18 10:20:06.000 [main] INFO com.example.App - Done",
+        ]
+        for line in lines:
+            yield line
+
+    events = [e async for e in parser.parse_async_stream(async_lines())]
+    assert len(events) == 3
+    assert events[1].exception_type == "java.lang.NullPointerException"
+
+
+def test_json_parser_extended_fields() -> None:
+    """Verify JSON parser extracts traceId, spanId, line_number, and nested error string."""
+    parser = JsonLogParser(service_name="api")
+    line = (
+        '{"timestamp": "2026-11-18T10:00:00Z", "level": "warn", "message": "High latency", '
+        '"trace_id": "tr-123", "span_id": "sp-456", "line_number": 42, '
+        '"error": "TimeoutException: Call took 5s"}'
+    )
+    event = parser.parse_line(line)
+    assert event is not None
+    assert event.trace_id == "tr-123"
+    assert event.span_id == "sp-456"
+    assert event.line_number == 42
+    assert event.exception_type == "TimeoutException"

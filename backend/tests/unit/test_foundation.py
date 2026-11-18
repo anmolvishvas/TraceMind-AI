@@ -110,10 +110,12 @@ async def test_api_deps_providers() -> None:
     session = await anext(db_gen)
     assert session is not None
     await session.close()
+    await db_gen.aclose()
 
     redis_gen = get_redis()
     client = await anext(redis_gen)
     assert client is not None
+    await redis_gen.aclose()
 
 
 @pytest.mark.asyncio

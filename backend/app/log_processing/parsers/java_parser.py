@@ -92,7 +92,7 @@ class JavaLogParser(BaseLogParser):
             # If we were collecting a stack trace and reached a non-stack line
             if in_stack_trace and stack_buffer:
                 in_stack_trace = False
-                self._enrich_event_with_stack(current_event, stack_buffer)
+                current_event = self._enrich_event_with_stack(current_event, stack_buffer)
                 stack_buffer = []
 
             match = JAVA_LOG_PATTERN.match(line)

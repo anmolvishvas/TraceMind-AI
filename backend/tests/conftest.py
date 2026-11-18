@@ -8,17 +8,22 @@ import app.models  # noqa: F401
 from app.core.database import Base, engine
 from app.main import create_app
 
+_tables_created = False
+
 
 @pytest.fixture(autouse=True)
 async def setup_test_tables() -> AsyncIterator[None]:
     """Ensure database schema is created for integration tests when DB is available."""
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            await conn.run_sync(Base.metadata.create_all)
-    except Exception:
-        # Gracefully proceed if running in isolated unit test environment without active DB
-        pass
+    global _tables_created
+    if not _tables_created:
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                await conn.run_sync(Base.metadata.create_all)
+            _tables_created = True
+        except Exception:
+            # Gracefully proceed if running in isolated unit test environment without active DB
+            pass
     yield
 
 

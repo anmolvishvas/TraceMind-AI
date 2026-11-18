@@ -34,7 +34,7 @@ def sample_events() -> list[CanonicalLogEvent]:
 async def test_persist_batch_and_redis_metrics(sample_events: list[CanonicalLogEvent]) -> None:
     """Verify micro-batch persistence and Redis pipeline metric updates."""
     mock_db = AsyncMock()
-    mock_redis = AsyncMock()
+    mock_redis = MagicMock()
     mock_pipe = MagicMock()
     mock_pipe.execute = AsyncMock()
     mock_redis.pipeline.return_value = mock_pipe

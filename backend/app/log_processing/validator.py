@@ -1,5 +1,6 @@
 """File upload validator and constant-memory streaming reader."""
 
+import inspect
 import io
 from collections.abc import AsyncIterator
 from typing import BinaryIO, Final
@@ -112,10 +113,11 @@ async def stream_log_lines(
     buffer = ""
 
     while True:
-        if isinstance(file_obj, UploadFile):
-            chunk = await file_obj.read(chunk_size)
+        read_call = file_obj.read(chunk_size)
+        if inspect.isawaitable(read_call):
+            chunk = await read_call
         else:
-            chunk = file_obj.read(chunk_size)
+            chunk = read_call
 
         if not chunk:
             break

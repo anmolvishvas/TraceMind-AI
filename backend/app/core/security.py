@@ -19,7 +19,9 @@ PRIVATE_KEY_PATTERN: Final[re.Pattern[str]] = re.compile(
 PASSWORD_KV_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"(?i)\b(password|passwd|secret|api[_-]?key|auth[_-]?token|access[_-]?token|client[_-]?secret)\s*([:=])\s*['\"]?([^\s'\",;&]+)['\"]?"
 )
-URL_CREDENTIAL_PATTERN: Final[re.Pattern[str]] = re.compile(r"(https?://)([^:\s]+):([^@\s]+)@")
+URL_CREDENTIAL_PATTERN: Final[re.Pattern[str]] = re.compile(
+    r"([a-zA-Z][a-zA-Z0-9+.-]*://)([^:\s@]+):([^@\s]+)@"
+)
 CREDIT_CARD_PATTERN: Final[re.Pattern[str]] = re.compile(r"\b(?:\d{4}[- ]?){3}\d{4}\b")
 EMAIL_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
