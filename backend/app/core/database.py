@@ -1,7 +1,7 @@
 """Asynchronous PostgreSQL database session and engine management."""
 
-from collections.abc import AsyncIterator
 import logging
+from collections.abc import AsyncIterator
 from typing import Any
 
 from sqlalchemy import text

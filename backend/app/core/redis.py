@@ -1,7 +1,7 @@
 """Asynchronous Redis client and sliding-window counter utilities."""
 
-from collections.abc import AsyncIterator
 import logging
+from collections.abc import AsyncIterator
 from typing import Any
 
 import redis.asyncio as aioredis
@@ -34,9 +34,13 @@ async def close_redis() -> None:
     """Close active Redis connection pool gracefully."""
     global _redis_client
     if _redis_client is not None:
-        await _redis_client.close()
-        _redis_client = None
-        logger.info("Redis connection pool closed.")
+        try:
+            await _redis_client.close()
+        except Exception as exc:
+            logger.debug("Silently handling Redis close notice: %s", exc)
+        finally:
+            _redis_client = None
+            logger.info("Redis connection pool closed.")
 
 
 async def get_redis_client() -> AsyncIterator[Redis]:

@@ -29,7 +29,7 @@ async def test_get_redis_dependency() -> None:
 
 @pytest.mark.asyncio
 async def test_close_redis_lifecycle() -> None:
-    """Verify close_redis releases resources without error."""
+    """Verify close_redis releases resources gracefully."""
     await close_redis()
-    # Calling a second time should also be safe (idempotent)
+    # Ensure calling when already closed is safe
     await close_redis()
