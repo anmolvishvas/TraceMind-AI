@@ -68,6 +68,7 @@ select = [
 ]
 ignore = [
     "B008", # do not perform function calls in argument defaults (FastAPI Depends)
+    "E501", # line too long (handled by ruff format / long string literals)
 ]
 
 [tool.mypy]
@@ -86,6 +87,7 @@ warn_unused_ignores = true
 module = [
     "asyncpg.*",
     "pgvector.*",
+    "redis.*",
     "scipy.*",
     "sklearn.*",
     "mcp.*",
