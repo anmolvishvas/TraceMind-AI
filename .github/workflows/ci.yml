@@ -60,7 +60,9 @@ jobs:
           pip install -e "./backend[dev]"
 
       - name: Run mypy Strict Check
-        run: mypy backend/app
+        run: |
+          cd backend
+          mypy app
 
   backend-tests:
     name: Automated Tests (Python ${{ matrix.python-version }})
