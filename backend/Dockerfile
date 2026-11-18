@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir hatchling \
-    && pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -e .
+COPY app/ ./app/
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip wheel --no-cache-dir --wheel-dir /build/wheels .
 
 # Final runtime image
 FROM python:3.12-slim AS runner
@@ -26,11 +26,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd -g 1001 appgroup && \
     useradd -u 1001 -g appgroup -s /bin/bash -m appuser
 
+COPY --from=builder /build/wheels /wheels
 COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir .
-
 COPY app/ ./app/
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir --no-index --find-links=/wheels tracemind-backend \
+    && rm -rf /wheels
 
 # Ensure directory permissions
 RUN mkdir -p /app/data/uploads && \

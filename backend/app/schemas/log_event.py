@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 from pydantic import BaseModel, Field
@@ -15,7 +15,7 @@ class CanonicalLogEvent(BaseModel):
         description="Globally unique identifier for the log event",
     )
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Normalized UTC ISO-8601 timestamp of event emission",
     )
     severity: Literal["DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"] = Field(

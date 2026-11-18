@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 import pytest
 from httpx import AsyncClient
 from pydantic import ValidationError
@@ -30,7 +30,7 @@ def test_settings_override() -> None:
 
 def test_canonical_log_event_schema_valid() -> None:
     """Test valid instantiation of CanonicalLogEvent."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     event = CanonicalLogEvent(
         timestamp=now,
         severity="ERROR",
