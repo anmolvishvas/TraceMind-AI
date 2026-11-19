@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class LikelihoodLevel(StrEnum):
@@ -143,10 +144,23 @@ class InvestigationChatRequest(BaseModel):
     incident_id: str | None = Field(
         default=None, description="Target incident ID (optional if provided in path)"
     )
-    query: str = Field(..., min_length=2, description="Engineer's diagnostic question")
+    query: str = Field(default="", description="Engineer's diagnostic question")
+    message: str | None = Field(default=None, description="Alias for query")
     history: list[InvestigationChatMessage] = Field(
         default_factory=list, description="Previous conversation turns"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def unify_query_and_message(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            msg = data.get("message")
+            qry = data.get("query")
+            if msg and not qry:
+                data["query"] = msg
+            elif qry and not msg:
+                data["message"] = qry
+        return data
 
 
 class InvestigationChatResponse(BaseModel):
@@ -154,9 +168,21 @@ class InvestigationChatResponse(BaseModel):
 
     incident_id: str
     answer: str
+    reply: str | None = None
+    content: str | None = None
     citations: list[EvidenceCitation] = Field(
         default_factory=list, description="Supporting evidence cited in the answer"
     )
     suggested_followups: list[str] = Field(
         default_factory=list, description="Relevant next questions to ask"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_aliases(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            ans = data.get("answer") or data.get("reply") or data.get("content") or ""
+            data["answer"] = ans
+            data["reply"] = ans
+            data["content"] = ans
+        return data
