@@ -239,7 +239,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 5
 
 ### Tasks:
-- [ ] **TASK-5.1: MCP Server Initialization & Transport Setup**
+- [x] **TASK-5.1: MCP Server Initialization & Transport Setup**
   - **Description:** Initialize the MCP server using `mcp.server.fastmcp`, configuring both STDIO transport (for local CLI/IDE) and SSE transport (for remote agents).
   - **Dependencies:** TASK-1.5.
   - **Files/Modules:** `backend/app/mcp/server.py`.
@@ -247,7 +247,7 @@ flowchart LR
   - **Tests:** `backend/tests/integration/test_mcp_handshake.py`.
   - **Deliverable:** Operational MCP server process.
 
-- [ ] **TASK-5.2: Core MCP Log Investigation Tools**
+- [x] **TASK-5.2: Core MCP Log Investigation Tools**
   - **Description:** Register `search_logs`, `get_log_details`, and `analyse_error_pattern` tools with strongly typed Pydantic parameter schemas.
   - **Dependencies:** TASK-2.6, TASK-5.1.
   - **Files/Modules:** `backend/app/mcp/tools.py`.
@@ -255,7 +255,7 @@ flowchart LR
   - **Tests:** `backend/tests/integration/test_mcp_log_tools.py`.
   - **Deliverable:** Log querying MCP tools.
 
-- [ ] **TASK-5.3: MCP Incident & Anomaly Tools**
+- [x] **TASK-5.3: MCP Incident & Anomaly Tools**
   - **Description:** Register `detect_anomalies`, `get_incident_details`, `get_incident_timeline`, and `find_related_incidents` tools.
   - **Dependencies:** TASK-3.4, TASK-3.5, TASK-5.1.
   - **Files/Modules:** `backend/app/mcp/tools.py`.
@@ -263,7 +263,7 @@ flowchart LR
   - **Tests:** `backend/tests/integration/test_mcp_incident_tools.py`.
   - **Deliverable:** Incident investigation MCP tools.
 
-- [ ] **TASK-5.4: MCP Historical Search & Report Tools**
+- [x] **TASK-5.4: MCP Historical Search & Report Tools**
   - **Description:** Register `search_historical_incidents`, `get_service_health`, and `generate_incident_report` tools.
   - **Dependencies:** TASK-4.2, TASK-4.4, TASK-5.1.
   - **Files/Modules:** `backend/app/mcp/tools.py`.
@@ -279,7 +279,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 6
 
 ### Tasks:
-- [ ] **TASK-6.1: React Project Setup & Design System Tokens**
+- [x] **TASK-6.1: React Project Setup & Design System Tokens**
   - **Description:** Scaffold React 18 SPA with Vite, TypeScript, Tailwind CSS, Lucide icons, and Axios API client. Configure theme tokens matching `docs/DESIGN.md`.
   - **Dependencies:** TASK-1.6.
   - **Files/Modules:** `frontend/package.json`, `frontend/tailwind.config.js`, `frontend/src/index.css`.
@@ -287,7 +287,7 @@ flowchart LR
   - **Tests:** Frontend component test suite (`vitest`).
   - **Deliverable:** Modern frontend workspace with design system.
 
-- [ ] **TASK-6.2: Overview Dashboard & Recharts Analytics**
+- [x] **TASK-6.2: Overview Dashboard & Recharts Analytics**
   - **Description:** Build main dashboard displaying 4 KPI summary cards, time-series anomaly trend chart, active incident list, and service health status.
   - **Dependencies:** TASK-6.1, TASK-1.5.
   - **Files/Modules:** `frontend/src/pages/Overview.tsx`, `frontend/src/components/MetricCard.tsx`.
@@ -295,7 +295,7 @@ flowchart LR
   - **Tests:** `frontend/src/pages/__tests__/Overview.test.tsx`.
   - **Deliverable:** Operational executive dashboard.
 
-- [ ] **TASK-6.3: Incident Management & Detail Command Center**
+- [x] **TASK-6.3: Incident Management & Detail Command Center**
   - **Description:** Build Incident List and 3-column Incident Detail View with status transition buttons, impacted service badges, and severity indicators.
   - **Dependencies:** TASK-6.1, TASK-3.4.
   - **Files/Modules:** `frontend/src/pages/Incidents.tsx`, `frontend/src/pages/IncidentDetail.tsx`.
@@ -303,7 +303,7 @@ flowchart LR
   - **Tests:** `frontend/src/pages/__tests__/IncidentDetail.test.tsx`.
   - **Deliverable:** Full incident triage interface.
 
-- [ ] **TASK-6.4: Interactive Incident Timeline Visualizer**
+- [x] **TASK-6.4: Interactive Incident Timeline Visualizer**
   - **Description:** Develop interactive horizontal and vertical timeline component showing chronological event progression with clickable milestone nodes.
   - **Dependencies:** TASK-6.3, TASK-3.5.
   - **Files/Modules:** `frontend/src/components/IncidentTimeline.tsx`.
@@ -311,7 +311,7 @@ flowchart LR
   - **Tests:** Visual regression and component unit test.
   - **Deliverable:** Interactive timeline visualizer.
 
-- [ ] **TASK-6.5: Log Explorer with Syntax Highlighting**
+- [x] **TASK-6.5: Log Explorer with Syntax Highlighting**
   - **Description:** High-density log viewer with search, facet filters, expandable JSON metadata, and stack trace view with copy actions.
   - **Dependencies:** TASK-6.1, TASK-2.6.
   - **Files/Modules:** `frontend/src/pages/LogExplorer.tsx`, `frontend/src/components/LogTable.tsx`.
@@ -319,7 +319,7 @@ flowchart LR
   - **Tests:** `frontend/src/pages/__tests__/LogExplorer.test.tsx`.
   - **Deliverable:** Fast, developer-friendly log browser.
 
-- [ ] **TASK-6.6: AI Investigation Chat & RCA Panel**
+- [x] **TASK-6.6: AI Investigation Chat & RCA Panel**
   - **Description:** Integrate conversational chat drawer with streaming AI responses, markdown rendering, clickable log citations, and safe diagnostic command boxes.
   - **Dependencies:** TASK-6.3, TASK-4.4, TASK-4.5.
   - **Files/Modules:** `frontend/src/components/AIAssistantDrawer.tsx`, `frontend/src/components/RCAPanel.tsx`.
@@ -335,7 +335,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 7
 
 ### Tasks:
-- [ ] **TASK-7.1: Large Log File Benchmark ($100\text{ MB}$ / 500,000 lines)**
+- [x] **TASK-7.1: Large Log File Benchmark ($100\text{ MB}$ / 500,000 lines)**
   - **Description:** Execute benchmark suite measuring streaming ingestion throughput, memory ceiling ($\le 200\text{ MB}$), and database insertion latency.
   - **Dependencies:** All previous phases.
   - **Files/Modules:** `scripts/benchmark_ingestion.py`.
@@ -343,7 +343,7 @@ flowchart LR
   - **Tests:** Automated benchmark run with assertion checks.
   - **Deliverable:** Performance verification report.
 
-- [ ] **TASK-7.2: Test Coverage Hardening ($\ge 90\%$)**
+- [x] **TASK-7.2: Test Coverage Hardening ($\ge 90\%$)**
   - **Description:** Audit backend test suite branch and statement coverage; write unit and integration tests for edge cases to exceed $90\%$ overall coverage.
   - **Dependencies:** All backend tasks.
   - **Files/Modules:** `backend/tests/`.
@@ -351,7 +351,7 @@ flowchart LR
   - **Tests:** Complete Pytest test suite.
   - **Deliverable:** Audited, high-coverage test suite.
 
-- [ ] **TASK-7.3: Security & Vulnerability Auditing**
+- [x] **TASK-7.3: Security & Vulnerability Auditing**
   - **Description:** Run Bandit static security analysis, pip-audit for dependency vulnerabilities, and npm audit on frontend packages.
   - **Dependencies:** TASK-1.1, TASK-6.1.
   - **Files/Modules:** Entire repository.
@@ -359,7 +359,7 @@ flowchart LR
   - **Tests:** Bandit and pip-audit execution.
   - **Deliverable:** Clean security audit report.
 
-- [ ] **TASK-7.4: CI/CD Pipeline Verification**
+- [x] **TASK-7.4: CI/CD Pipeline Verification**
   - **Description:** Validate GitHub Actions workflows (`ci.yml` and `pr-audit.yml`) ensuring automated linting, type checks, tests, security scans, and Docker builds pass.
   - **Dependencies:** All tasks.
   - **Files/Modules:** `.github/workflows/ci.yml`, `.github/workflows/pr-audit.yml`.
@@ -367,7 +367,7 @@ flowchart LR
   - **Tests:** GitHub Actions CI run.
   - **Deliverable:** Production-grade CI/CD automation.
 
-- [ ] **TASK-7.5: Final Demo Seed Dataset & Runbook Showcase**
+- [x] **TASK-7.5: Final Demo Seed Dataset & Runbook Showcase**
   - **Description:** Provide synthetic multi-service outage logs (e.g., e-commerce payment gateway timeout cascading to order service) and runbooks for demonstration.
   - **Dependencies:** All tasks.
   - **Files/Modules:** `scripts/seed_demo_data.py`, `docs/runbooks/sample_db_pool_saturation.md`.
