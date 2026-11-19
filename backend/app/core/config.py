@@ -57,6 +57,7 @@ class Settings(BaseSettings):
 
     # Security & CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    MCP_API_KEY: str = Field(default="tracemind-mcp-default-key")
 
 
 @lru_cache(maxsize=1)
