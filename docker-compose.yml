@@ -54,6 +54,10 @@ services:
       - "8000:8000"
     volumes:
       - uploaded_logs:/app/data/uploads
+      - ./scripts:/app/scripts:ro
+      - ./docs:/app/docs:ro
+      - ./backend/alembic:/app/alembic:ro
+      - ./backend/alembic.ini:/app/alembic.ini:ro
     depends_on:
       postgres:
         condition: service_healthy

@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md alembic.ini ./
+COPY alembic/ ./alembic/
 COPY app/ ./app/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip wheel --no-cache-dir --wheel-dir /build/wheels .
@@ -27,7 +28,8 @@ RUN groupadd -g 1001 appgroup && \
     useradd -u 1001 -g appgroup -s /bin/bash -m appuser
 
 COPY --from=builder /build/wheels /wheels
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md alembic.ini ./
+COPY alembic/ ./alembic/
 COPY app/ ./app/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
     && pip install --no-cache-dir --no-index --find-links=/wheels tracemind-backend \
