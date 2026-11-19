@@ -132,3 +132,30 @@ export interface SemanticSearchResult {
   content: string;
   similarity_score: number;
 }
+
+export type ChaosScenario =
+  | "db_pool_starvation"
+  | "redis_cache_failover"
+  | "kafka_consumer_lag"
+  | "pod_memory_leak";
+
+export interface ScenarioMetadata {
+  scenario: ChaosScenario;
+  name: string;
+  description: string;
+  lead_service: string;
+  affected_services: string[];
+  severity: string;
+  symptoms: string[];
+  icon: string;
+}
+
+export interface ChaosSimulateResponse {
+  incident: Incident;
+  scenario: ChaosScenario;
+  injected_logs_count: number;
+  injected_anomalies_count: number;
+  runbook_title: string;
+  message: string;
+  extra_details?: Record<string, unknown>;
+}
