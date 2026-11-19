@@ -44,16 +44,20 @@ async def get_recent_anomalies(
     if items:
         return [
             {
-                "id": str(a.id),
-                "timestamp": a.timestamp.strftime("%H:%M") if hasattr(a.timestamp, "strftime") else str(a.timestamp),
+                "id": str(a.anomaly_id),
+                "timestamp": (
+                    a.timestamp.strftime("%H:%M")
+                    if hasattr(a.timestamp, "strftime")
+                    else str(a.timestamp)
+                ),
                 "service_name": a.service_name,
                 "metric_name": a.metric_name,
-                "metric_value": a.metric_value,
-                "expected_value": a.expected_value if a.expected_value is not None else 3.0,
+                "metric_value": a.current_value,
+                "expected_value": (a.baseline_mean if a.baseline_mean is not None else 3.0),
                 "score": a.anomaly_score,
-                "method": a.detection_method,
+                "method": a.detection_method.value,
                 "is_anomaly": True,
-                "severity": a.severity,
+                "severity": a.severity.value,
             }
             for a in items
         ]
