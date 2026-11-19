@@ -8,6 +8,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db_session
+from app.schemas.chaos import (
+    ChaosSimulateRequest,
+    ChaosSimulateResponse,
+    ScenarioMetadata,
+)
 from app.schemas.incident import (
     IncidentDetailResponse,
     IncidentResponse,
@@ -20,6 +25,7 @@ from app.schemas.rca import (
     RCARequest,
     RCAResponse,
 )
+from app.services.chaos_service import ChaosService
 from app.services.incident_service import IncidentService
 from app.services.rca_service import RCAService
 
@@ -39,6 +45,29 @@ async def correlate_incidents(
     """
     service = IncidentService(db=db)
     return await service.correlate_unassigned_events(lookback_minutes=lookback_minutes)
+
+
+@router.get("/scenarios", response_model=list[ScenarioMetadata], status_code=200)
+async def list_chaos_scenarios(
+    db: AsyncSession = Depends(get_db_session),
+) -> list[ScenarioMetadata]:
+    """Retrieve catalog of available preconfigured failure scenarios for chaos injection."""
+    service = ChaosService(db=db)
+    return service.get_available_scenarios()
+
+
+@router.post("/simulate", response_model=ChaosSimulateResponse, status_code=201)
+async def simulate_chaos_incident(
+    payload: ChaosSimulateRequest | None = None,
+    db: AsyncSession = Depends(get_db_session),
+) -> ChaosSimulateResponse:
+    """
+    Inject synthetic chaos failure telemetry (logs, anomalies, runbooks) and correlate
+    an operational incident cluster ready for instant AI root cause analysis.
+    """
+    service = ChaosService(db=db)
+    req = payload or ChaosSimulateRequest()
+    return await service.simulate_incident(req)
 
 
 @router.get("", response_model=dict[str, Any], status_code=200)

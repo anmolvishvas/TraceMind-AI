@@ -10,6 +10,8 @@ import {
   searchKnowledgeBase,
   fetchDocuments,
   transitionIncident,
+  fetchChaosScenarios,
+  triggerChaosSimulation,
   MOCK_INCIDENTS,
   MOCK_LOGS,
   MOCK_RCA,
@@ -107,5 +109,24 @@ describe("TraceMind Frontend Architecture & API Client Tests", () => {
     const docs = await fetchDocuments();
     expect(docs.length).toBeGreaterThan(0);
     expect(docs[0].document_type).toBeDefined();
+  });
+
+  it("fetches chaos failure scenarios catalog", async () => {
+    const scenarios = await fetchChaosScenarios();
+    expect(scenarios.length).toBe(4);
+    const ids = scenarios.map((s) => s.scenario);
+    expect(ids).toContain("db_pool_starvation");
+    expect(ids).toContain("redis_cache_failover");
+    expect(ids).toContain("kafka_consumer_lag");
+    expect(ids).toContain("pod_memory_leak");
+  });
+
+  it("triggers chaos outage simulation successfully", async () => {
+    const res = await triggerChaosSimulation("redis_cache_failover", "Test Redis Chaos");
+    expect(res.scenario).toBe("redis_cache_failover");
+    expect(res.incident).toBeDefined();
+    expect(res.incident.lead_service).toBe("auth-service");
+    expect(res.injected_logs_count).toBeGreaterThan(0);
+    expect(res.message).toBeDefined();
   });
 });

@@ -10,6 +10,9 @@ import {
   KnowledgeDocument,
   SemanticSearchResult,
   IncidentStatus,
+  ChaosScenario,
+  ScenarioMetadata,
+  ChaosSimulateResponse,
 } from "../types";
 
 const API_BASE = "/api/v1";
@@ -479,5 +482,126 @@ export async function fetchDocuments(): Promise<KnowledgeDocument[]> {
         chunk_count: 12,
       },
     ];
+  }
+}
+
+export const MOCK_CHAOS_SCENARIOS: ScenarioMetadata[] = [
+  {
+    scenario: "db_pool_starvation",
+    name: "PostgreSQL Connection Pool Starvation",
+    description: "Exhaustion of SQLAlchemy database pool in payment-gateway causing cascading HTTP 504 timeouts in order-api.",
+    lead_service: "payment-gateway",
+    affected_services: ["payment-gateway", "order-api", "checkout-web"],
+    severity: "CRITICAL",
+    symptoms: [
+      "QueuePool limit of size 50 reached",
+      "HTTP 504 Gateway Timeouts on checkout",
+      "Database connection acquisition latency > 30s",
+    ],
+    icon: "database",
+  },
+  {
+    scenario: "redis_cache_failover",
+    name: "Redis Cache Eviction & Session Stampede",
+    description: "Redis cluster master node failover drops cached JWT session tokens, triggering high-volume database query stampedes.",
+    lead_service: "auth-service",
+    affected_services: ["auth-service", "api-gateway", "user-web"],
+    severity: "HIGH",
+    symptoms: [
+      "P99 session verification latency surges to 2400ms",
+      "ConnectionRefusedError on redis://auth-cache:6379",
+      "Thundering herd SQL queries on users table",
+    ],
+    icon: "zap",
+  },
+  {
+    scenario: "kafka_consumer_lag",
+    name: "Kafka Consumer Rebalance Storm & Lag Spike",
+    description: "Unbalanced partition heartbeat timeouts cause recurring rebalances, halting order event ingestion and accumulating massive backlog.",
+    lead_service: "order-processing-worker",
+    affected_services: ["order-processing-worker", "inventory-service", "fulfillment-api"],
+    severity: "HIGH",
+    symptoms: [
+      "CommitFailedError during rebalance in progress",
+      "Consumer lag records surge to 48,000+",
+      "Inventory fulfillment delays exceeding 15 minutes",
+    ],
+    icon: "layers",
+  },
+  {
+    scenario: "pod_memory_leak",
+    name: "JVM Heap Exhaustion & Pod OOMKilled",
+    description: "Progressive uncollected document buffer memory leak triggers intensive garbage collection pauses and container exit code 137.",
+    lead_service: "search-indexer",
+    affected_services: ["search-indexer", "catalog-api"],
+    severity: "CRITICAL",
+    symptoms: [
+      "Container terminated with Exit Code 137 (OOMKilled)",
+      "java.lang.OutOfMemoryError: Java heap space",
+      "Catalog search queries failing with HTTP 503",
+    ],
+    icon: "cpu",
+  },
+];
+
+export async function fetchChaosScenarios(): Promise<ScenarioMetadata[]> {
+  try {
+    const res = await fetch(`${API_BASE}/incidents/scenarios`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0 ? data : MOCK_CHAOS_SCENARIOS;
+  } catch {
+    return MOCK_CHAOS_SCENARIOS;
+  }
+}
+
+export async function triggerChaosSimulation(
+  scenario: ChaosScenario = "db_pool_starvation",
+  customTitle?: string
+): Promise<ChaosSimulateResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/incidents/simulate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scenario, custom_title: customTitle }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch {
+    const rnd = Math.floor(1000 + Math.random() * 9000);
+    const mockIncident: Incident = {
+      id: `sim-${rnd}`,
+      incident_id: `INC-2026-${rnd}`,
+      title: customTitle || `Simulated ${scenario.replace(/_/g, " ").toUpperCase()}`,
+      status: "INVESTIGATING",
+      severity:
+        scenario === "redis_cache_failover" || scenario === "kafka_consumer_lag"
+          ? "HIGH"
+          : "CRITICAL",
+      lead_service:
+        scenario === "redis_cache_failover"
+          ? "auth-service"
+          : scenario === "kafka_consumer_lag"
+          ? "order-processing-worker"
+          : scenario === "pod_memory_leak"
+          ? "search-indexer"
+          : "payment-gateway",
+      affected_services: [
+        scenario === "redis_cache_failover" ? "auth-service" : "payment-gateway",
+      ],
+      error_signatures: [`chaos:${scenario}`],
+      started_at: new Date(Date.now() - 1800000).toISOString(),
+      detected_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    return {
+      incident: mockIncident,
+      scenario,
+      injected_logs_count: 16,
+      injected_anomalies_count: 1,
+      runbook_title: "Remediation Guide",
+      message: `Chaos scenario '${scenario}' successfully simulated.`,
+    };
   }
 }

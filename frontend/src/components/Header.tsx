@@ -1,16 +1,18 @@
 import { FC } from "react";
-import { Activity, ShieldCheck, Terminal, Cpu } from "lucide-react";
+import { Activity, ShieldCheck, Terminal, Cpu, Flame } from "lucide-react";
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   activeIncidentCount: number;
+  onOpenChaosModal?: () => void;
 }
 
 export const Header: FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   activeIncidentCount,
+  onOpenChaosModal,
 }) => {
   const tabs = [
     { id: "overview", label: "Overview", icon: Activity },
@@ -67,8 +69,19 @@ export const Header: FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Right Status */}
+          {/* Right Status & Chaos Trigger */}
           <div className="flex items-center space-x-3">
+            {onOpenChaosModal && (
+              <button
+                onClick={onOpenChaosModal}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500/20 to-red-500/20 hover:from-orange-500/30 hover:to-red-500/30 border border-orange-500/40 text-orange-300 rounded-lg text-xs font-semibold shadow-sm transition"
+                title="Inject simulated production failure"
+              >
+                <Flame className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
+                <span className="hidden sm:inline">Simulate Incident</span>
+                <span className="sm:hidden">Chaos</span>
+              </button>
+            )}
             <div className="flex items-center space-x-2 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               <span className="font-mono text-[11px]">Engine Online</span>

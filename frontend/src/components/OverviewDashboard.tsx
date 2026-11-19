@@ -7,6 +7,10 @@ import {
   ArrowRight,
   Clock,
   Layers,
+  Flame,
+  Zap,
+  Database,
+  Loader2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -19,13 +23,16 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-import { Incident, AnomalyDataPoint } from "../types";
+import { Incident, AnomalyDataPoint, ChaosScenario } from "../types";
 
 interface OverviewProps {
   incidents: Incident[];
   anomalies: AnomalyDataPoint[];
   onSelectIncident: (id: string) => void;
   onNavigateTab: (tab: string) => void;
+  onOpenChaosModal?: () => void;
+  onQuickSimulate?: (scenario: ChaosScenario) => Promise<void>;
+  isSimulating?: boolean;
 }
 
 export const OverviewDashboard: FC<OverviewProps> = ({
@@ -33,6 +40,9 @@ export const OverviewDashboard: FC<OverviewProps> = ({
   anomalies,
   onSelectIncident,
   onNavigateTab,
+  onOpenChaosModal,
+  onQuickSimulate,
+  isSimulating,
 }) => {
   const activeIncidents = incidents.filter(
     (i) => i.status !== "RESOLVED" && i.status !== "CLOSED"
@@ -87,6 +97,92 @@ export const OverviewDashboard: FC<OverviewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Chaos Engineering Simulation Sandbox Banner */}
+      <div className="bg-gradient-to-r from-[#1E1B4B]/60 via-[#1E1B4B]/30 to-[#0F172A] border border-indigo-500/30 rounded-xl p-4 sm:p-5 shadow-lg shadow-indigo-950/20">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 rounded-lg bg-orange-500/20 border border-orange-500/30 text-orange-400">
+                <Flame className="w-4 h-4 animate-pulse" />
+              </div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                Simulate Incident / Chaos Trigger
+                <span className="px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded">
+                  Interactive Demo
+                </span>
+              </h3>
+            </div>
+            <p className="text-xs text-gray-300 max-w-2xl">
+              Inject synthetic microservice failure telemetry into TraceMind to see statistical anomaly detection, trace-based event correlation, and AI-grounded root cause analysis in action.
+            </p>
+          </div>
+
+          {/* Quick Scenario Triggers */}
+          <div className="flex flex-wrap items-center gap-2">
+            {onQuickSimulate && (
+              <>
+                <button
+                  onClick={() => onQuickSimulate("db_pool_starvation")}
+                  disabled={isSimulating}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 border border-amber-500/30 hover:border-amber-500/60 text-amber-300 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                  title="Simulate PostgreSQL connection pool exhaustion in payment-gateway"
+                >
+                  <Database className="w-3.5 h-3.5 text-amber-400" />
+                  <span>DB Pool Starvation</span>
+                </button>
+
+                <button
+                  onClick={() => onQuickSimulate("redis_cache_failover")}
+                  disabled={isSimulating}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 border border-cyan-500/30 hover:border-cyan-500/60 text-cyan-300 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                  title="Simulate Redis failover and cache stampede in auth-service"
+                >
+                  <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Redis Failover</span>
+                </button>
+
+                <button
+                  onClick={() => onQuickSimulate("kafka_consumer_lag")}
+                  disabled={isSimulating}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 border border-indigo-500/30 hover:border-indigo-500/60 text-indigo-300 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                  title="Simulate Kafka consumer group rebalance storm and lag spike"
+                >
+                  <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Kafka Lag</span>
+                </button>
+
+                <button
+                  onClick={() => onQuickSimulate("pod_memory_leak")}
+                  disabled={isSimulating}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-gray-900/90 hover:bg-gray-800 border border-rose-500/30 hover:border-rose-500/60 text-rose-300 rounded-lg text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                  title="Simulate JVM memory leak and Pod OOMKilled in search-indexer"
+                >
+                  <Cpu className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Pod OOMKill</span>
+                </button>
+              </>
+            )}
+
+            {onOpenChaosModal && (
+              <button
+                onClick={onOpenChaosModal}
+                disabled={isSimulating}
+                className="flex items-center space-x-1 px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-indigo-200 rounded-lg text-xs font-semibold transition"
+              >
+                {isSimulating ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>All Scenarios</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* 4 Metric KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

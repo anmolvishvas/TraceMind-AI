@@ -153,7 +153,9 @@ class AnomalyService:
                 baseline_mean=r.baseline_mean,
                 baseline_std=r.baseline_std,
                 threshold=r.threshold,
-                anomaly_score=r.anomaly_score,
+                anomaly_score=min(max(float(r.anomaly_score), 0.0), 1.0)
+                if r.anomaly_score is not None
+                else 0.5,
                 severity=r.severity,  # type: ignore[arg-type]
                 detection_method=r.detection_method,  # type: ignore[arg-type]
                 confidence=0.9,
