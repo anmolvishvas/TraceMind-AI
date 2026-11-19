@@ -58,6 +58,7 @@ services:
       - ./docs:/app/docs:ro
       - ./backend/alembic:/app/alembic:ro
       - ./backend/alembic.ini:/app/alembic.ini:ro
+      - ./backend/app:/app/app:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -81,6 +82,7 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
       - backend
     networks:

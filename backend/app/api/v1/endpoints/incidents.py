@@ -69,6 +69,7 @@ async def list_incidents(
         "limit": limit,
         "offset": offset,
         "items": [item.model_dump() for item in items],
+        "incidents": [item.model_dump() for item in items],
     }
 
 
@@ -93,6 +94,7 @@ async def get_incident_timeline(
 
 
 @router.patch("/{incident_id}/status", response_model=IncidentResponse, status_code=200)
+@router.post("/{incident_id}/transition", response_model=IncidentResponse, status_code=200)
 async def update_incident_status(
     incident_id: str,
     payload: IncidentStatusUpdate,

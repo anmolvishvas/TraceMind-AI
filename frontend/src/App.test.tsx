@@ -38,7 +38,7 @@ describe("TraceMind Frontend Architecture & API Client Tests", () => {
     expect(MOCK_RCA.hypotheses.length).toBeGreaterThanOrEqual(2);
     const confirmedHypothesis = MOCK_RCA.hypotheses.find((h) => h.likelihood === "CONFIRMED");
     expect(confirmedHypothesis).toBeDefined();
-    expect(confirmedHypothesis?.supporting_evidence.length).toBeGreaterThan(0);
+    expect(confirmedHypothesis?.supporting_evidence?.length).toBeGreaterThan(0);
     expect(confirmedHypothesis?.confidence_score).toBeGreaterThan(0.9);
   });
 
