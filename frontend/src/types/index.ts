@@ -95,7 +95,7 @@ export interface RCAResponse {
   incident_id: string;
   executive_summary: string;
   hypotheses: RootCauseHypothesis[];
-  primary_root_cause?: string | null;
+  primary_root_cause?: string | RootCauseHypothesis | null;
   affected_components: string[];
   cascading_propagation: string[];
   immediate_mitigation_steps: string[];

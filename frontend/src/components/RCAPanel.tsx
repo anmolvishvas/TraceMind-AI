@@ -136,9 +136,16 @@ export const RCAPanel: FC<RCAPanelProps> = ({
                   <ShieldAlert className="w-4 h-4" />
                   <span>Identified Primary Root Cause</span>
                 </div>
-                <p className="text-sm text-gray-100 font-medium leading-relaxed">
-                  {rca.primary_root_cause}
-                </p>
+                <h4 className="text-sm text-cyan-200 font-bold leading-snug">
+                  {typeof rca.primary_root_cause === "string"
+                    ? rca.primary_root_cause
+                    : rca.primary_root_cause.title}
+                </h4>
+                {typeof rca.primary_root_cause !== "string" && rca.primary_root_cause.description && (
+                  <p className="text-xs text-gray-300 mt-1.5 leading-relaxed">
+                    {rca.primary_root_cause.description}
+                  </p>
+                )}
               </div>
             )}
 
@@ -265,25 +272,28 @@ export const RCAPanel: FC<RCAPanelProps> = ({
               </h3>
 
               <div className="space-y-2">
-                {rca.diagnostic_commands.map((cmd, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between bg-[#0F172A] border border-gray-800 rounded-lg p-2.5 font-mono text-xs text-cyan-300 group"
-                  >
-                    <span className="truncate mr-3">{cmd}</span>
-                    <button
-                      onClick={() => handleCopy(cmd)}
-                      className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition flex-shrink-0"
-                      title="Copy Command"
+                {(rca.diagnostic_commands || []).map((cmd, idx) => {
+                  const cmdText = typeof cmd === "string" ? cmd : JSON.stringify(cmd);
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between bg-[#0F172A] border border-gray-800 rounded-lg p-2.5 font-mono text-xs text-cyan-300 group"
                     >
-                      {copiedCmd === cmd ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                ))}
+                      <span className="truncate mr-3">{cmdText}</span>
+                      <button
+                        onClick={() => handleCopy(cmdText)}
+                        className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-white transition flex-shrink-0"
+                        title="Copy Command"
+                      >
+                        {copiedCmd === cmdText ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
