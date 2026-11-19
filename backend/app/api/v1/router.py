@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import anomalies, health, incidents, logs
+from app.api.v1.endpoints import anomalies, health, incidents, logs, rag
 
 api_v1_router = APIRouter()
 
@@ -17,3 +17,6 @@ api_v1_router.include_router(anomalies.router)
 
 # Mount incident correlation and lifecycle endpoints
 api_v1_router.include_router(incidents.router)
+
+# Mount RAG knowledge base and semantic search endpoints
+api_v1_router.include_router(rag.router)

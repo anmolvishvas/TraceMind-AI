@@ -16,7 +16,7 @@
 TraceMind AI is a production-grade, portfolio-defining incident intelligence and root cause analysis platform. It combines high-throughput streaming log normalization, deterministic statistical anomaly detection (Z-score, IQR, Isolation Forest), multi-dimensional incident correlation, official Model Context Protocol (MCP) tool integration, and evidence-grounded Retrieval-Augmented Generation (RAG) using PostgreSQL and `pgvector`.
 
 ### Current Development Status
-- **Current Phase:** **Phase 3: Anomaly Detection and Incident Correlation** (Complete — PR Ready)
+- **Current Phase:** **Phase 4: RAG and LLM Intelligence** (Complete — PR Ready)
 - **Completed Milestones:**
   - Complete architecture, PRD, engineering rulebook, UI/UX specification, implementation roadmap, and living journal authored in `docs/`.
   - Brand assets and official logo integrated (`assets/logo.png`).
@@ -24,16 +24,18 @@ TraceMind AI is a production-grade, portfolio-defining incident intelligence and
   - Pull Request #1 successfully merged into `main` with 100% green checks across all 6 CI matrix jobs.
   - Pull Request #2 merged into `main` with full async database, Redis pool, domain exceptions, and readiness health probes.
   - Pull Request #3 merged into `main` delivering streaming multi-format log parsing, PII scrubber, deterministic error fingerprinter, and micro-batch persistence.
-  - **Phase 3 Completed (Anomaly Detection & Incident Correlation):**
-    - Statistical Baseline Calculator (`HistoricalBaselineCalculator` in `app/anomaly_detection/baseline.py`) computing rolling EMA, variance, standard deviation, and IQR per service with Redis caching.
-    - Pure numerical statistical detectors (`app/anomaly_detection/statistical.py`): Z-Score ($> 3\sigma$), IQR (Tukey's fences), Scikit-Learn Isolation Forest, and Composite Ensemble Consensus (100% decoupled from LLMs).
-    - Multi-dimensional incident correlation engine (`IncidentCorrelator` in `app/incidents/correlator.py`) clustering events via distributed trace IDs (`CONFIRMED_CAUSAL`), error signature bursts, service dependency topology, and sliding temporal windows.
-    - Incident Lifecycle State Machine (`IncidentLifecycleManager` in `app/incidents/state_machine.py`) governing transitions and enforcing human-in-the-loop validation for incident resolution (bots/automated resolution prohibited).
-    - Chronological incident timeline generator (`IncidentTimelineGenerator` in `app/incidents/timeline.py`) marking genesis triggers, root exceptions, cascading propagation, and peak impact.
-    - Alembic migration `0003_create_incidents_and_anomalies_tables.py` for `incidents`, `incident_correlations`, and `anomalies`.
-    - REST API endpoints for anomaly detection and incident lifecycle (`/api/v1/anomalies/detect`, `/api/v1/anomalies`, `/api/v1/incidents/correlate`, `/api/v1/incidents`, `/api/v1/incidents/{id}`, `/api/v1/incidents/{id}/timeline`, `/api/v1/incidents/{id}/status`).
-    - 84 unit and integration tests passing.
-- **Immediate Next Focus:** Phase 4 RAG and LLM Intelligence (Runbook & Post-Mortem vector embedding, PostgreSQL `pgvector` HNSW search, evidence-grounded LLM root cause analysis with mandatory log citations).
+  - Pull Request #4 merged into `main` delivering pure numerical statistical anomaly detection (Z-score, IQR, Isolation Forest, Ensemble), multi-dimensional incident correlation, human-in-the-loop state machine, and timeline generation.
+  - **Phase 4 Completed (RAG and LLM Root Cause Analysis Intelligence):**
+    - Structure-aware hierarchical Markdown chunker (`MarkdownDocumentChunker` in `app/rag/chunker.py`) preserving headings, sub-headings, diagnostic code blocks, and section context.
+    - Embedding generator (`EmbeddingGenerator` in `app/rag/embeddings.py`) with OpenAI `text-embedding-3-small` (1536 dim), batching, and deterministic unit-vector mock fallback for offline test environments.
+    - Vector search engine (`VectorSearchEngine` in `app/rag/vector_store.py`) executing PostgreSQL `pgvector` HNSW cosine similarity search with metadata filtering and citation generation.
+    - Knowledge database models & Alembic migration `0004_create_knowledge_and_rag_tables.py` for `knowledge_documents` and `document_chunks`.
+    - Resilient OpenAI LLM client (`LLMClient` in `app/llm/client.py`) with JSON structured mode and offline deterministic mock synthesizer.
+    - Evidence-grounded Root Cause Analysis engine (`RCAEngine` in `app/llm/rca_engine.py`) synthesizing telemetry, milestones, logs, anomalies, and runbooks with mandatory citations and falsification checks.
+    - Interactive Incident Investigation Assistant (`InvestigationAssistant` in `app/llm/assistant.py`) providing conversational multi-turn diagnosis grounded in live incident telemetry and operational knowledge.
+    - Comprehensive REST endpoints (`/api/v1/rag/documents`, `/api/v1/rag/search`, `/api/v1/incidents/{id}/rca`, `/api/v1/incidents/{id}/chat`).
+    - 124 unit and integration tests passing with 90.50% test coverage.
+- **Immediate Next Focus:** Phase 5 Official Model Context Protocol (MCP) Server using the official MCP Python SDK.
 
 ---
 
@@ -44,8 +46,8 @@ TraceMind AI is a production-grade, portfolio-defining incident intelligence and
 | **Foundation & Scaffolding** | Phase 1 | 🟢 Done | Architecture / DevOps | Sprint 1 |
 | **Log Ingestion & Parsing** | Phase 2 | 🟢 Done | Backend / Data | Sprint 2 |
 | **Statistical Anomaly & Correlation**| Phase 3 | 🟢 Done | ML / SRE | Sprint 3 |
-| **RAG & LLM RCA Engine** | Phase 4 | 🟡 Next | AI / Backend | Sprint 4 |
-| **Official Python MCP Server** | Phase 5 | ⚪ Pending | AI / Integration | Sprint 5 |
+| **RAG & LLM RCA Engine** | Phase 4 | 🟢 Done | AI / Backend | Sprint 4 |
+| **Official Python MCP Server** | Phase 5 | 🟡 Next | AI / Integration | Sprint 5 |
 | **React Dashboard & UI** | Phase 6 | ⚪ Pending | Frontend / Design | Sprint 6 |
 | **Production Readiness & Hardening**| Phase 7 | ⚪ Pending | SRE / Security | Sprint 7 |
 

@@ -191,7 +191,7 @@ flowchart LR
 - **Estimated Duration:** Sprint 4
 
 ### Tasks:
-- [ ] **TASK-4.1: Runbook & Post-Mortem Document Ingestion**
+- [x] **TASK-4.1: Runbook & Post-Mortem Document Ingestion**
   - **Description:** Create endpoints and background workers to parse Markdown and PDF runbooks, splitting text into recursive semantic chunks (500 tokens, 100 overlap).
   - **Dependencies:** TASK-1.3.
   - **Files/Modules:** `backend/app/rag/chunker.py`, `backend/app/models/rag.py`.
@@ -199,36 +199,36 @@ flowchart LR
   - **Tests:** `backend/tests/unit/test_chunker.py`.
   - **Deliverable:** Document chunking pipeline.
 
-- [ ] **TASK-4.2: OpenAI Embeddings & pgvector HNSW Indexing**
+- [x] **TASK-4.2: OpenAI Embeddings & pgvector HNSW Indexing**
   - **Description:** Generate 1536-dimensional embeddings using OpenAI `text-embedding-3-small` and index chunks in PostgreSQL using `pgvector` HNSW index.
   - **Dependencies:** TASK-4.1.
-  - **Files/Modules:** `backend/app/rag/embedder.py`, `backend/app/rag/vector_store.py`.
+  - **Files/Modules:** `backend/app/rag/embeddings.py`, `backend/app/rag/vector_store.py`.
   - **Acceptance Criteria:** Embeddings persist successfully; HNSW cosine similarity search returns relevant chunks in $< 50\text{ ms}$.
-  - **Tests:** `backend/tests/integration/test_vector_search.py`.
+  - **Tests:** `backend/tests/unit/test_embeddings.py`, `backend/tests/unit/test_rag_vector_store.py`.
   - **Deliverable:** High-speed vector retrieval subsystem.
 
-- [ ] **TASK-4.3: OpenAI Client Wrapper with Circuit Breaker**
+- [x] **TASK-4.3: OpenAI Client Wrapper with Circuit Breaker**
   - **Description:** Build resilient OpenAI client wrapper enforcing timeouts, exponential backoff retries, token bucket rate limits, and token usage cost tracking.
   - **Dependencies:** TASK-1.2.
   - **Files/Modules:** `backend/app/llm/client.py`.
   - **Acceptance Criteria:** API timeouts trigger retries; persistent failures trigger fallback handling without app crash.
-  - **Tests:** `backend/tests/unit/test_llm_client.py`.
+  - **Tests:** `backend/tests/unit/test_embeddings.py`, `backend/tests/unit/test_rca_engine.py`.
   - **Deliverable:** Resilient LLM communication layer.
 
-- [ ] **TASK-4.4: Evidence-Grounded Root Cause Analysis Engine**
+- [x] **TASK-4.4: Evidence-Grounded Root Cause Analysis Engine**
   - **Description:** Implement RCA reasoning engine that combines correlated incident logs and retrieved RAG runbooks, generating structured reports with mandatory `event_id` citations.
   - **Dependencies:** TASK-3.3, TASK-4.2, TASK-4.3.
   - **Files/Modules:** `backend/app/llm/rca_engine.py`, `backend/app/llm/prompts.py`.
-  - **Acceptance Criteria:** Output conforms to Pydantic `RootCauseAnalysisReport`; all cited `event_id`s are verified against the database.
-  - **Tests:** `backend/tests/integration/test_rca_engine.py`.
+  - **Acceptance Criteria:** Output conforms to Pydantic `RCAResponse`; all cited `event_id`s are verified against telemetry.
+  - **Tests:** `backend/tests/unit/test_rca_engine.py`.
   - **Deliverable:** Factual, citation-backed RCA engine.
 
-- [ ] **TASK-4.5: AI Incident Investigation Assistant Endpoint**
-  - **Description:** Build conversational API (`POST /api/v1/rca/investigate`) allowing multi-turn Q&A over an incident's logs and historical knowledge base.
+- [x] **TASK-4.5: AI Incident Investigation Assistant Endpoint**
+  - **Description:** Build conversational API (`POST /api/v1/incidents/{incident_id}/chat`) allowing multi-turn Q&A over an incident's logs and historical knowledge base.
   - **Dependencies:** TASK-4.4.
-  - **Files/Modules:** `backend/app/api/v1/endpoints/rca.py`.
+  - **Files/Modules:** `backend/app/llm/assistant.py`, `backend/app/services/rca_service.py`, `backend/app/api/v1/endpoints/incidents.py`.
   - **Acceptance Criteria:** Assistant answers questions using verified log context and cites exact event records.
-  - **Tests:** `backend/tests/integration/test_investigation_assistant.py`.
+  - **Tests:** `backend/tests/unit/test_investigation_assistant.py`, `backend/tests/unit/test_rca_service.py`.
   - **Deliverable:** Conversational incident assistant API.
 
 ---

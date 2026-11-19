@@ -12,6 +12,7 @@ from app.api.deps import get_db_session, get_redis
 from app.main import app
 from app.models.anomaly import AnomalyModel
 from app.models.incident import IncidentCorrelationModel, IncidentModel
+from app.models.rag import DocumentChunkModel, KnowledgeDocumentModel
 from app.schemas.incident import IncidentSeverity, IncidentStatus
 
 
@@ -241,3 +242,207 @@ def test_incident_status_update_endpoint(client: TestClient, mock_db: AsyncMock)
     response = client.patch("/api/v1/incidents/inc-api-300/status", json=payload)
     assert response.status_code == 200
     assert response.json()["status"] == "IDENTIFIED"
+
+
+def test_rag_documents_endpoints(client: TestClient, mock_db: AsyncMock) -> None:
+    """Test POST, GET, DELETE /api/v1/rag/documents."""
+    now = datetime.now(UTC)
+
+    # 1. Create document
+    create_payload = {
+        "title": "PostgreSQL Recovery Playbook",
+        "source_type": "RUNBOOK",
+        "service_name": "db-service",
+        "category": "database",
+        "content": "# Recovery Steps\n1. Check status.\n2. Restart replica.\n\n# Verification\nRun select 1.",
+        "metadata": {"author": "sre"},
+    }
+    create_resp = client.post("/api/v1/rag/documents", json=create_payload)
+    assert create_resp.status_code == 201
+    created_data = create_resp.json()
+    assert created_data["title"] == "PostgreSQL Recovery Playbook"
+    assert created_data["total_chunks"] >= 2
+
+    # 2. List documents
+    mock_doc = KnowledgeDocumentModel(
+        id=str(uuid4()),
+        document_id="doc-list-1",
+        title="Redis Runbook",
+        source_type="RUNBOOK",
+        service_name="cache-service",
+        category="cache",
+        content="Cache runbook",
+        metadata_={},
+        created_at=now,
+        updated_at=now,
+    )
+    mock_count = MagicMock()
+    mock_count.scalar.return_value = 1
+    mock_rows = MagicMock()
+    mock_rows.scalars.return_value.all.return_value = [mock_doc]
+
+    mock_db.execute.side_effect = [mock_count, mock_rows]
+    list_resp = client.get("/api/v1/rag/documents?service_name=cache-service")
+    assert list_resp.status_code == 200
+    assert list_resp.json()["total"] == 1
+
+    # 3. Get document detail
+    mock_chunk = DocumentChunkModel(
+        id=str(uuid4()),
+        document_id=mock_doc.id,
+        chunk_index=0,
+        content="Step 1",
+        section_title="## Triage",
+        token_count=5,
+        embedding=[0.0] * 1536,
+        metadata_={},
+        created_at=now,
+    )
+    mock_doc.chunks = [mock_chunk]
+
+    mock_detail_res = MagicMock()
+    mock_detail_res.scalar_one_or_none.return_value = mock_doc
+    mock_db.execute.side_effect = [mock_detail_res]
+
+    detail_resp = client.get("/api/v1/rag/documents/doc-list-1")
+    assert detail_resp.status_code == 200
+    assert detail_resp.json()["document_id"] == "doc-list-1"
+    assert len(detail_resp.json()["chunks"]) == 1
+
+    # 4. Delete document
+    mock_db.execute.side_effect = [mock_detail_res]
+    del_resp = client.delete("/api/v1/rag/documents/doc-list-1")
+    assert del_resp.status_code == 204
+
+
+def test_rag_search_endpoint(client: TestClient, mock_db: AsyncMock) -> None:
+    """Test POST /api/v1/rag/search."""
+    now = datetime.now(UTC)
+    mock_doc = KnowledgeDocumentModel(
+        id=str(uuid4()),
+        document_id="doc-search-1",
+        title="Disk Space Runbook",
+        source_type="RUNBOOK",
+        service_name="node-service",
+        category="infrastructure",
+        content="Clear /tmp directory.",
+        metadata_={},
+        created_at=now,
+        updated_at=now,
+    )
+    mock_chunk = DocumentChunkModel(
+        id=str(uuid4()),
+        document_id=mock_doc.id,
+        chunk_index=0,
+        content="Run rm -rf /tmp/stale_*",
+        section_title="## Remediation",
+        token_count=10,
+        embedding=[0.0] * 1536,
+        metadata_={},
+        created_at=now,
+    )
+
+    mock_res = MagicMock()
+    # distance = 0.1 -> similarity = 0.9
+    mock_res.all.return_value = [(mock_chunk, mock_doc, 0.1)]
+    mock_db.execute.return_value = mock_res
+
+    payload = {
+        "query": "disk space full on node",
+        "service_name": "node-service",
+        "limit": 5,
+        "min_similarity": 0.5,
+    }
+    search_resp = client.post("/api/v1/rag/search", json=payload)
+    assert search_resp.status_code == 200
+    body = search_resp.json()
+    assert body["total_results"] == 1
+    assert body["results"][0]["document_id"] == "doc-search-1"
+
+
+def test_incident_rca_and_chat_endpoints(client: TestClient, mock_db: AsyncMock) -> None:
+    """Test POST /api/v1/incidents/{incident_id}/rca and /chat."""
+    now = datetime.now(UTC)
+    mock_inc = IncidentModel(
+        id=str(uuid4()),
+        incident_id="inc-api-rca",
+        title="Payment timeouts",
+        status=IncidentStatus.INVESTIGATING.value,
+        severity=IncidentSeverity.CRITICAL.value,
+        lead_service="payment-service",
+        affected_services=["payment-service"],
+        error_signatures=["sig-1"],
+        started_at=now,
+        detected_at=now,
+        metadata_={},
+        created_at=now,
+        updated_at=now,
+    )
+    mock_corr = IncidentCorrelationModel(
+        id=str(uuid4()),
+        incident_id=mock_inc.id,
+        event_id="evt-rca-1",
+        correlation_type="CONFIRMED_CAUSAL",
+        confidence_score=1.0,
+        reason="Trace match",
+        created_at=now,
+    )
+    mock_inc.correlations = [mock_corr]
+
+    # Query responses for incident fetch
+    mock_inc_res = MagicMock()
+    mock_inc_res.scalar_one_or_none.return_value = mock_inc
+
+    mock_evts_res = MagicMock()
+    mock_evts_res.scalars.return_value.all.return_value = []
+
+    # Count for anomaly fetch
+    mock_anom_count = MagicMock()
+    mock_anom_count.scalar.return_value = 0
+    mock_anom_rows = MagicMock()
+    mock_anom_rows.scalars.return_value.all.return_value = []
+
+    # Search result for RAG fetch
+    mock_rag_res = MagicMock()
+    mock_rag_res.all.return_value = []
+
+    # Sequence of DB executions for RCA endpoint:
+    # 1. get_incident (incident query)
+    # 2. get_incident (events query)
+    # 3. list_anomalies (count query)
+    # 4. list_anomalies (rows query)
+    # 5. rag search (search query)
+    mock_db.execute.side_effect = [
+        mock_inc_res,
+        mock_evts_res,
+        mock_anom_count,
+        mock_anom_rows,
+        mock_rag_res,
+    ]
+
+    rca_resp = client.post("/api/v1/incidents/inc-api-rca/rca", json={"include_rag_context": True})
+    assert rca_resp.status_code == 200
+    rca_body = rca_resp.json()
+    assert rca_body["incident_id"] == "inc-api-rca"
+    assert len(rca_body["hypotheses"]) >= 1
+
+    # Sequence of DB executions for Chat endpoint:
+    # 1. get_incident (incident query)
+    # 2. get_incident (events query)
+    # 3. rag search (search query)
+    mock_db.execute.side_effect = [
+        mock_inc_res,
+        mock_evts_res,
+        mock_rag_res,
+    ]
+
+    chat_payload = {
+        "incident_id": "inc-api-rca",
+        "query": "What services are affected?",
+        "history": [],
+    }
+    chat_resp = client.post("/api/v1/incidents/inc-api-rca/chat", json=chat_payload)
+    assert chat_resp.status_code == 200
+    chat_body = chat_resp.json()
+    assert chat_body["incident_id"] == "inc-api-rca"
+    assert len(chat_body["answer"]) > 0
