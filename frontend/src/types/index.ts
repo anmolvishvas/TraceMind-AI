@@ -112,8 +112,8 @@ export interface ChatMessage {
   sender: "user" | "assistant";
   content: string;
   timestamp: string;
-  citations?: string[];
-  suggested_commands?: string[];
+  citations?: (string | { citation_type?: string; source_id?: string; service_name?: string; excerpt?: string; reference?: string })[];
+  suggested_commands?: (string | { command?: string })[];
 }
 
 export interface KnowledgeDocument {
