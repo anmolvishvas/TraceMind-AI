@@ -59,6 +59,12 @@ async def upload_log_file(
 
 
 @router.get(
+    "",
+    response_model=dict[str, Any],
+    summary="Query application log events",
+    include_in_schema=False,
+)
+@router.get(
     "/search",
     response_model=dict[str, Any],
     summary="Search indexed log events",
@@ -93,11 +99,13 @@ async def search_logs(
         limit=limit,
         offset=offset,
     )
+    serialized_events = [e.model_dump() for e in events]
     return {
         "total": total,
         "limit": limit,
         "offset": offset,
-        "items": [e.model_dump() for e in events],
+        "items": serialized_events,
+        "events": serialized_events,
     }
 
 

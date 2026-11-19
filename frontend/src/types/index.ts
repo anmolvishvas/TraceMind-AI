@@ -85,9 +85,10 @@ export interface RootCauseHypothesis {
   description: string;
   likelihood: "CONFIRMED" | "HIGH" | "MEDIUM" | "LOW" | "UNLIKELY";
   confidence_score: number;
-  supporting_evidence: string[];
-  contradicting_evidence: string[];
-  recommended_actions: string[];
+  supporting_evidence?: (string | { reference?: string; excerpt?: string })[];
+  contradicting_evidence?: string[];
+  falsification_checks?: string[];
+  recommended_actions?: string[];
 }
 
 export interface RCAResponse {

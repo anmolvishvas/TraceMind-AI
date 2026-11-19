@@ -53,9 +53,17 @@ class RootCauseHypothesis(BaseModel):
         default_factory=list,
         description="Mandatory citations to log events or runbooks supporting this hypothesis",
     )
+    contradicting_evidence: list[str] = Field(
+        default_factory=list,
+        description="Observed evidence or conditions that weaken this hypothesis",
+    )
     falsification_checks: list[str] = Field(
         default_factory=list,
         description="Specific tests/queries an engineer should run to prove or disprove this",
+    )
+    recommended_actions: list[str] = Field(
+        default_factory=list,
+        description="Targeted remediation steps specific to this hypothesis",
     )
 
 

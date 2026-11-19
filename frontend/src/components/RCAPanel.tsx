@@ -159,15 +159,17 @@ export const RCAPanel: FC<RCAPanelProps> = ({
                   Hypothesis Evaluation & Supporting Evidence
                 </h3>
                 <span className="text-[11px] text-gray-400 font-mono">
-                  {rca.hypotheses.length} Hypotheses Formulated
+                  {rca.hypotheses?.length || 0} Hypotheses Formulated
                 </span>
               </div>
 
               <div className="space-y-4">
-                {rca.hypotheses.map((hyp) => {
+                {(rca.hypotheses || []).map((hyp) => {
                   const isConfirmed = hyp.likelihood === "CONFIRMED";
                   const isHigh = hyp.likelihood === "HIGH";
                   const isUnlikely = hyp.likelihood === "UNLIKELY";
+                  const supportingEv = hyp.supporting_evidence || [];
+                  const contradictingEv = hyp.contradicting_evidence || hyp.falsification_checks || [];
 
                   return (
                     <div
@@ -205,41 +207,47 @@ export const RCAPanel: FC<RCAPanelProps> = ({
                       <p className="text-xs text-gray-300 leading-relaxed">{hyp.description}</p>
 
                       {/* Supporting Evidence Citations */}
-                      {hyp.supporting_evidence.length > 0 && (
+                      {supportingEv.length > 0 && (
                         <div className="space-y-1 pt-2 border-t border-gray-800">
                           <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
                             Supporting Log Citations:
                           </span>
                           <ul className="space-y-1">
-                            {hyp.supporting_evidence.map((ev, i) => (
-                              <li
-                                key={i}
-                                className="text-[11px] text-gray-300 bg-[#0F172A] border border-gray-800 rounded px-2.5 py-1 font-mono flex items-center space-x-1.5"
-                              >
-                                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                                <span className="truncate">{ev}</span>
-                              </li>
-                            ))}
+                            {supportingEv.map((ev: any, i: number) => {
+                              const label = typeof ev === "string" ? ev : (ev.reference || ev.excerpt || JSON.stringify(ev));
+                              return (
+                                <li
+                                  key={i}
+                                  className="text-[11px] text-gray-300 bg-[#0F172A] border border-gray-800 rounded px-2.5 py-1 font-mono flex items-center space-x-1.5"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                                  <span className="truncate">{label}</span>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}
 
-                      {/* Contradicting Evidence */}
-                      {hyp.contradicting_evidence.length > 0 && (
+                      {/* Contradicting / Falsification Proof */}
+                      {contradictingEv.length > 0 && (
                         <div className="space-y-1 pt-1">
-                          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
                             Contradicting / Falsification Proof:
                           </span>
                           <ul className="space-y-1">
-                            {hyp.contradicting_evidence.map((ev, i) => (
-                              <li
-                                key={i}
-                                className="text-[11px] text-gray-400 bg-[#0F172A] border border-gray-800 rounded px-2.5 py-1 font-mono flex items-center space-x-1.5"
-                              >
-                                <Info className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                                <span>{ev}</span>
-                              </li>
-                            ))}
+                            {contradictingEv.map((ev: any, i: number) => {
+                              const label = typeof ev === "string" ? ev : (ev.reference || ev.excerpt || JSON.stringify(ev));
+                              return (
+                                <li
+                                  key={i}
+                                  className="text-[11px] text-gray-400 bg-[#0F172A] border border-gray-800 rounded px-2.5 py-1 font-mono flex items-center space-x-1.5"
+                                >
+                                  <Info className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                  <span>{label}</span>
+                                </li>
+                              );
+                            })}
                           </ul>
                         </div>
                       )}

@@ -250,7 +250,8 @@ export async function fetchIncidents(): Promise<Incident[]> {
     const res = await fetch(`${API_BASE}/incidents`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return data.incidents && data.incidents.length > 0 ? data.incidents : MOCK_INCIDENTS;
+    const items = data.incidents || data.items || (Array.isArray(data) ? data : []);
+    return items.length > 0 ? items : MOCK_INCIDENTS;
   } catch {
     return MOCK_INCIDENTS;
   }
@@ -307,9 +308,16 @@ export async function fetchLogs(params?: {
     if (params?.severity) query.set("severity", params.severity);
     if (params?.limit) query.set("limit", String(params.limit));
 
-    const res = await fetch(`${API_BASE}/logs?${query.toString()}`);
+    const res = await fetch(`${API_BASE}/logs/search?${query.toString()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    const events = data.events || data.items || [];
+    return {
+      total: data.total ?? events.length,
+      limit: data.limit ?? (params?.limit || 50),
+      offset: data.offset ?? 0,
+      events: events.length > 0 ? events : MOCK_LOGS,
+    };
   } catch {
     return {
       total: MOCK_LOGS.length,
@@ -343,7 +351,8 @@ export async function fetchRecentAnomalies(): Promise<AnomalyDataPoint[]> {
     const res = await fetch(`${API_BASE}/anomalies/recent`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    return data.length > 0 ? data : MOCK_ANOMALIES;
+    const list = Array.isArray(data) ? data : data.items || [];
+    return list.length > 0 ? list : MOCK_ANOMALIES;
   } catch {
     return MOCK_ANOMALIES;
   }
@@ -357,7 +366,13 @@ export async function triggerRCA(incidentId: string): Promise<RCAResponse> {
       body: JSON.stringify({ incident_id: incidentId }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    return {
+      ...data,
+      hypotheses: data.hypotheses || [],
+      diagnostic_commands: data.diagnostic_commands || [],
+      preventive_actions: data.preventive_actions || [],
+    };
   } catch {
     return { ...MOCK_RCA, incident_id: incidentId };
   }
