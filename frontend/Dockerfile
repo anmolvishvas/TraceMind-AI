@@ -13,18 +13,8 @@ RUN npm run build
 FROM nginx:alpine AS runner
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 3000
-
-# Basic Nginx server configuration for SPA routing
-RUN printf 'server {\n\
-    listen 3000;\n\
-    server_name localhost;\n\
-    location / {\n\
-        root /usr/share/nginx/html;\n\
-        index index.html index.htm;\n\
-        try_files $uri $uri/ /index.html;\n\
-    }\n\
-}\n' > /etc/nginx/conf.d/default.conf
 
 CMD ["nginx", "-g", "daemon off;"]
