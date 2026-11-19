@@ -345,27 +345,60 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
+
 class CanonicalLogEvent(BaseModel):
     """
     Production-grade canonical internal representation of an operational log entry.
     All ingestion pipelines must normalize source data into this exact structure.
     """
-    event_id: str = Field(..., description="Globally unique UUIDv7 identifier for the log event")
-    timestamp: datetime = Field(..., description="Normalized UTC ISO-8601 timestamp of event emission")
-    severity: str = Field(..., description="Normalized log level: DEBUG, INFO, WARN, ERROR, CRITICAL")
-    service_name: str = Field(..., description="Identifier of the emitting microservice or application")
-    environment: str = Field(default="production", description="Runtime environment: production, staging, dev")
-    message: str = Field(..., description="Cleaned, primary log message text (PII scrubbed)")
-    exception_type: Optional[str] = Field(None, description="Extracted class name of the exception if present")
-    stack_trace: Optional[str] = Field(None, description="Full normalized multi-line stack trace")
-    error_signature: Optional[str] = Field(None, description="SHA-256 hash of the normalized stack trace")
-    request_id: Optional[str] = Field(None, description="HTTP or RPC request correlation identifier")
-    trace_id: Optional[str] = Field(None, description="OpenTelemetry / W3C distributed trace identifier")
+
+    event_id: str = Field(
+        ..., description="Globally unique UUIDv7 identifier for the log event"
+    )
+    timestamp: datetime = Field(
+        ..., description="Normalized UTC ISO-8601 timestamp of event emission"
+    )
+    severity: str = Field(
+        ..., description="Normalized log level: DEBUG, INFO, WARN, ERROR, CRITICAL"
+    )
+    service_name: str = Field(
+        ..., description="Identifier of the emitting microservice or application"
+    )
+    environment: str = Field(
+        default="production",
+        description="Runtime environment: production, staging, dev",
+    )
+    message: str = Field(
+        ..., description="Cleaned, primary log message text (PII scrubbed)"
+    )
+    exception_type: Optional[str] = Field(
+        None, description="Extracted class name of the exception if present"
+    )
+    stack_trace: Optional[str] = Field(
+        None, description="Full normalized multi-line stack trace"
+    )
+    error_signature: Optional[str] = Field(
+        None, description="SHA-256 hash of the normalized stack trace"
+    )
+    request_id: Optional[str] = Field(
+        None, description="HTTP or RPC request correlation identifier"
+    )
+    trace_id: Optional[str] = Field(
+        None, description="OpenTelemetry / W3C distributed trace identifier"
+    )
     span_id: Optional[str] = Field(None, description="OpenTelemetry span identifier")
-    correlation_id: Optional[str] = Field(None, description="Custom business transaction correlation ID")
-    source_file: Optional[str] = Field(None, description="Source file name or uploaded artifact name")
-    line_number: Optional[int] = Field(None, description="Source code line number if available")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary unindexed structured attributes")
+    correlation_id: Optional[str] = Field(
+        None, description="Custom business transaction correlation ID"
+    )
+    source_file: Optional[str] = Field(
+        None, description="Source file name or uploaded artifact name"
+    )
+    line_number: Optional[int] = Field(
+        None, description="Source code line number if available"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Arbitrary unindexed structured attributes"
+    )
 ```
 
 ### 4.2 Ingestion & Normalization Specifications
@@ -507,21 +540,37 @@ To eliminate hallucinations, the RCA engine wraps the LLM generation within a ve
 from typing import List
 from pydantic import BaseModel, Field
 
+
 class SupportingEvidenceItem(BaseModel):
-    event_id: str = Field(..., description="Exact UUIDv7 event_id of the supporting log entry")
+    event_id: str = Field(
+        ..., description="Exact UUIDv7 event_id of the supporting log entry"
+    )
     timestamp: str = Field(..., description="Timestamp of the referenced event")
     log_snippet: str = Field(..., description="Verbatim text from the referenced log")
-    relevance_explanation: str = Field(..., description="Why this log entry supports the hypothesis")
+    relevance_explanation: str = Field(
+        ..., description="Why this log entry supports the hypothesis"
+    )
+
 
 class RootCauseAnalysisReport(BaseModel):
     summary: str = Field(..., description="Executive summary of the incident")
     primary_hypothesis: str = Field(..., description="The most probable root cause")
-    confidence_score: float = Field(..., ge=0.0, le=1.0, description="Mathematical confidence")
-    supporting_evidence: List[SupportingEvidenceItem] = Field(..., description="Direct log citations")
+    confidence_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Mathematical confidence"
+    )
+    supporting_evidence: List[SupportingEvidenceItem] = Field(
+        ..., description="Direct log citations"
+    )
     alternative_hypotheses: List[str] = Field(default_factory=list)
-    investigation_steps: List[str] = Field(..., description="Actionable diagnostic steps")
-    recommended_remediations: List[str] = Field(..., description="Proposed fixes (requires human approval)")
-    citations: List[str] = Field(default_factory=list, description="Runbook document references")
+    investigation_steps: List[str] = Field(
+        ..., description="Actionable diagnostic steps"
+    )
+    recommended_remediations: List[str] = Field(
+        ..., description="Proposed fixes (requires human approval)"
+    )
+    citations: List[str] = Field(
+        default_factory=list, description="Runbook document references"
+    )
 ```
 
 ---
@@ -539,20 +588,26 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("TraceMind-AI-Incident-Server")
 
+
 @mcp.tool()
-async def search_logs(service_name: str, query: str, severity: str = "ERROR", limit: int = 50) -> str:
+async def search_logs(
+    service_name: str, query: str, severity: str = "ERROR", limit: int = 50
+) -> str:
     """Search canonicalized application logs with filtering."""
     ...
+
 
 @mcp.tool()
 async def get_incident_details(incident_id: str) -> str:
     """Retrieve full incident metadata, severity, impacted services, and state."""
     ...
 
+
 @mcp.tool()
 async def get_incident_timeline(incident_id: str) -> str:
     """Retrieve the chronological event progression timeline of an incident."""
     ...
+
 
 @mcp.tool()
 async def search_historical_incidents(query: str, limit: int = 3) -> str:
