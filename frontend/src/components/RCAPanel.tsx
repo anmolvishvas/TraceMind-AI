@@ -335,11 +335,20 @@ export const RCAPanel: FC<RCAPanelProps> = ({
                           <span className="text-[10px] font-bold text-cyan-300 uppercase">
                             Supporting Citations:
                           </span>
-                          {msg.citations.map((c, i) => (
-                            <div key={i} className="text-[10px] font-mono text-gray-400">
-                              • {c}
-                            </div>
-                          ))}
+                          {msg.citations.map((c: any, i: number) => {
+                            const citationText =
+                              typeof c === "string"
+                                ? c
+                                : c.reference ||
+                                  (c.service_name && c.source_id
+                                    ? `[${c.citation_type || "Source"}: ${c.source_id} (${c.service_name})]`
+                                    : c.excerpt || JSON.stringify(c));
+                            return (
+                              <div key={i} className="text-[10px] font-mono text-gray-400">
+                                • {citationText}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -349,16 +358,20 @@ export const RCAPanel: FC<RCAPanelProps> = ({
                           <span className="text-[10px] font-bold text-amber-300 uppercase">
                             Diagnostic Suggestions:
                           </span>
-                          {msg.suggested_commands.map((cmd, i) => (
-                            <div
-                              key={i}
-                              onClick={() => handleCopy(cmd)}
-                              className="text-[10px] font-mono bg-[#090D16] p-1.5 rounded text-cyan-300 border border-gray-800 cursor-pointer hover:border-cyan-500/40 flex items-center justify-between"
-                            >
-                              <span className="truncate">{cmd}</span>
-                              <Copy className="w-3 h-3 text-gray-500 ml-1 flex-shrink-0" />
-                            </div>
-                          ))}
+                          {msg.suggested_commands.map((cmd: any, i: number) => {
+                            const cmdText =
+                              typeof cmd === "string" ? cmd : cmd.command || JSON.stringify(cmd);
+                            return (
+                              <div
+                                key={i}
+                                onClick={() => handleCopy(cmdText)}
+                                className="text-[10px] font-mono bg-[#090D16] p-1.5 rounded text-cyan-300 border border-gray-800 cursor-pointer hover:border-cyan-500/40 flex items-center justify-between"
+                              >
+                                <span className="truncate">{cmdText}</span>
+                                <Copy className="w-3 h-3 text-gray-500 ml-1 flex-shrink-0" />
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
