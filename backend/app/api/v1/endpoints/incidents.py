@@ -14,7 +14,14 @@ from app.schemas.incident import (
     IncidentStatusUpdate,
     IncidentTimeline,
 )
+from app.schemas.rca import (
+    InvestigationChatRequest,
+    InvestigationChatResponse,
+    RCARequest,
+    RCAResponse,
+)
 from app.services.incident_service import IncidentService
+from app.services.rca_service import RCAService
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 
@@ -97,3 +104,35 @@ async def update_incident_status(
     """
     service = IncidentService(db=db)
     return await service.update_status(incident_id, payload)
+
+
+@router.post("/{incident_id}/rca", response_model=RCAResponse, status_code=200)
+async def generate_root_cause_analysis(
+    incident_id: str,
+    payload: RCARequest | None = None,
+    db: AsyncSession = Depends(get_db_session),
+) -> RCAResponse:
+    """
+    Generate an evidence-grounded AI Root Cause Analysis (RCA) for an incident.
+    Synthesizes timeline, correlated logs, anomalies, and retrieved historical runbooks.
+    """
+    service = RCAService(db=db)
+    req = payload or RCARequest(incident_id=incident_id)
+    # Ensure incident_id matches path
+    req.incident_id = incident_id
+    return await service.generate_rca(req)
+
+
+@router.post("/{incident_id}/chat", response_model=InvestigationChatResponse, status_code=200)
+async def investigate_chat(
+    incident_id: str,
+    payload: InvestigationChatRequest,
+    db: AsyncSession = Depends(get_db_session),
+) -> InvestigationChatResponse:
+    """
+    Interactive dialogue with the AI incident investigation assistant.
+    Grounded in incident live context and operational knowledge.
+    """
+    service = RCAService(db=db)
+    payload.incident_id = incident_id
+    return await service.investigate_chat(payload)
