@@ -383,17 +383,21 @@ export async function sendChatMessage(incidentId: string, message: string): Prom
     const res = await fetch(`${API_BASE}/incidents/${incidentId}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ query: message, message }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    const citationsList = (data.citations || []).map((c: any) =>
+      typeof c === "string" ? c : (c.reference || c.excerpt || JSON.stringify(c))
+    );
+    const suggested = data.suggested_followups || data.suggested_commands || [];
     return {
       id: `msg-${Date.now()}`,
       sender: "assistant",
-      content: data.reply || data.content,
+      content: data.answer || data.reply || data.content || "Investigation analysis completed.",
       timestamp: new Date().toISOString(),
-      citations: data.citations || [],
-      suggested_commands: data.suggested_commands || [],
+      citations: citationsList,
+      suggested_commands: suggested,
     };
   } catch {
     return {
